@@ -1,0 +1,54 @@
+import { useState, useEffect } from 'react';
+import { AppRouter } from './router/index.tsx';
+import { AuthProvider } from './contexts/AuthContext.tsx';
+import { status as getStatus } from './api/config.ts';
+import type { SystemStatus } from './api/config.ts';
+import { SystemContext } from './contexts/SystemContext.tsx';
+import { Spin } from 'antd';
+import { Routes, Route, Navigate } from 'react-router';
+import SetupPage from './pages/SetupPage.tsx';
+
+function App() {
+  const [status, setStatus] = useState<SystemStatus | null>(null);
+  useEffect(() => {
+    async function checkInitialization() {
+      try {
+        const status = await getStatus();
+        setStatus(status);
+        document.title = status.title;
+        const favicon = document.querySelector("link[rel*='icon']") as HTMLLinkElement;
+        if (favicon) {
+          favicon.href = status.logo;
+        }
+      } catch (error) {
+        console.error("Failed to check initialization status:", error);
+      }
+    }
+    checkInitialization();
+  }, []);
+
+  if (status === null) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <SystemContext.Provider value={status}>
+      <AuthProvider>
+        {!status.is_initialized ? (
+          <Routes>
+            <Route path="/setup" element={<SetupPage />} />
+            <Route path="*" element={<Navigate to="/setup" replace />} />
+          </Routes>
+        ) : (
+          <AppRouter />
+        )}
+      </AuthProvider>
+    </SystemContext.Provider>
+  );
+}
+
+export default App;

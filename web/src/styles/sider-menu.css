@@ -1,0 +1,23 @@
+.foxel-sider-menu .ant-menu-item {
+  font-weight: 500;
+  border-radius: 8px;
+  transition: background .18s, color .18s;
+  margin-block: 2px;
+}
+
+.foxel-sider-menu .ant-menu-item-selected {
+  font-weight: 600;
+}
+
+.foxel-sider-menu .ant-menu-item-selected,
+.foxel-sider-menu .ant-menu-item-selected .ant-menu-item-icon {
+  color: #fff !important;
+}
+
+.foxel-sider-menu .ant-menu-item-selected::after {
+  display: none;
+}
+
+.foxel-sider-menu .ant-menu-item .ant-menu-item-icon {
+  transition: color .18s;
+}

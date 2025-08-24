@@ -1,0 +1,84 @@
+from fastapi import APIRouter, Depends, HTTPException
+from typing import Annotated
+
+from models.database import AutomationTask
+from schemas.tasks import AutomationTaskCreate, AutomationTaskUpdate
+from api.response import success
+from services.auth import get_current_active_user, User
+from services.logging import LogService
+
+router = APIRouter(
+    prefix="/api/tasks",
+    tags=["Tasks"],
+    dependencies=[Depends(get_current_active_user)],
+    responses={404: {"description": "Not found"}},
+)
+
+
+@router.post("/")
+async def create_task(
+    task_in: AutomationTaskCreate,
+    user: User = Depends(get_current_active_user)
+):
+    task = await AutomationTask.create(**task_in.model_dump())
+    await LogService.action(
+        "route:tasks",
+        f"Created task {task.name}",
+        details=task_in.model_dump(),
+        user_id=user.id if hasattr(user, "id") else None,
+    )
+    return success(task)
+
+
+@router.get("/{task_id}")
+async def get_task(task_id: int):
+    task = await AutomationTask.get_or_none(id=task_id)
+    if not task:
+        raise HTTPException(
+            status_code=404, detail=f"Task {task_id} not found")
+    return success(task)
+
+
+@router.get("/")
+async def list_tasks():
+    tasks = await AutomationTask.all()
+    return success(tasks)
+
+
+@router.put("/{task_id}")
+async def update_task(
+        current_user: Annotated[User, Depends(get_current_active_user)],
+        task_id: int, task_in: AutomationTaskUpdate):
+    task = await AutomationTask.get_or_none(id=task_id)
+    if not task:
+        raise HTTPException(
+            status_code=404, detail=f"Task {task_id} not found")
+    update_data = task_in.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(task, key, value)
+    await task.save()
+    await LogService.action(
+        "route:tasks",
+        f"Updated task {task.name}",
+        details=task_in.model_dump(),
+        user_id=current_user.id,
+    )
+    return success(task)
+
+
+@router.delete("/{task_id}")
+async def delete_task(
+    task_id: int,
+    user: User = Depends(get_current_active_user)
+):
+    deleted_count = await AutomationTask.filter(id=task_id).delete()
+    if not deleted_count:
+        raise HTTPException(
+            status_code=404, detail=f"Task {task_id} not found")
+    await LogService.action(
+        "route:tasks",
+        f"Deleted task {task_id}",
+        details={"task_id": task_id},
+        user_id=user.id if hasattr(user, "id") else None,
+    )
+    return success(msg="Task deleted")
