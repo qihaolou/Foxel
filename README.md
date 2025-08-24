@@ -5,6 +5,7 @@
 **一个面向个人和团队的、高度可扩展的私有云盘解决方案，支持 AI 语义搜索。**
 
 ![Python Version](https://img.shields.io/badge/Python-3.13+-blue.svg)
+![React](https://img.shields.io/badge/React-19.0-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
 ![GitHub stars](https://img.shields.io/github/stars/DrizzleTime/foxel?style=social)
 
