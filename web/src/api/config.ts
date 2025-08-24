@@ -8,7 +8,7 @@ export async function setConfig(key: string, value: string) {
   const form = new FormData();
   form.append('key', key);
   form.append('value', value);
-  return request('/config', { method: 'POST', formData: form });
+  return request('/config/', { method: 'POST', formData: form });
 }
 
 export async function getAllConfig() {
