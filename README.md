@@ -41,7 +41,7 @@ chmod 777 data/db data/mount
 2. **下载 Docker Compose 文件**:
 
   ```bash
-  curl -O https://raw.githubusercontent.com/DrizzleTime/foxel/main/docker-compose.yml
+  curl -L -O https://github.com/DrizzleTime/Foxel/raw/main/compose.yaml
   ```
 
 3. **启动服务**:
