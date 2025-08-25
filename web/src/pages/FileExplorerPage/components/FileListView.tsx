@@ -10,6 +10,7 @@ interface FileListViewProps {
   loading: boolean;
   selectedEntries: string[];
   onRowClick: (entry: VfsEntry, e: React.MouseEvent) => void;
+  onSelectionChange: (selectedKeys: string[]) => void;
   onOpen: (entry: VfsEntry) => void;
   onOpenWith: (entry: VfsEntry, appKey: string) => void;
   onRename: (entry: VfsEntry) => void;
@@ -22,6 +23,7 @@ export const FileListView: React.FC<FileListViewProps> = ({
   loading,
   selectedEntries,
   onRowClick,
+  onSelectionChange,
   onOpen,
   onOpenWith,
   onRename,
@@ -99,8 +101,7 @@ export const FileListView: React.FC<FileListViewProps> = ({
       rowClassName={(r) => selectedEntries.includes(r.name) ? 'row-selected' : ''}
       rowSelection={{
         selectedRowKeys: selectedEntries,
-        onChange: () => {
-        }
+        onChange: (keys) => onSelectionChange(keys as string[]),
       }}
     />
   );

@@ -29,7 +29,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
 
   // --- Hooks ---
   const { path, entries, loading, pagination, processorTypes, load, navigateTo, goUp, handlePaginationChange, refresh } = useFileExplorer(navKey);
-  const { selectedEntries, handleSelect, handleSelectRange, clearSelection } = useFileSelection();
+  const { selectedEntries, handleSelect, handleSelectRange, clearSelection, setSelectedEntries } = useFileSelection();
   const { uploading, fileInputRef, doCreateDir, doDelete, doRename, doDownload, doShare, handleUploadClick, handleFilesSelected } = useFileActions({ path, refresh, clearSelection, onShare: (entries) => setSharingEntries(entries) });
   const { appWindows, openFileWithDefaultApp, confirmOpenWithApp, closeWindow, toggleMax, bringToFront, updateWindow } = useAppWindows(path);
   const { ctxMenu, blankCtxMenu, openContextMenu, openBlankContextMenu, closeContextMenus } = useContextMenu();
@@ -126,6 +126,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
             loading={loading}
             selectedEntries={selectedEntries}
             onRowClick={(r, e) => handleSelect(r, e.ctrlKey || e.metaKey)}
+            onSelectionChange={setSelectedEntries}
             onOpen={handleOpenEntry}
             onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, { key: appKey, name: '' } as any)}
             onRename={setRenaming}
