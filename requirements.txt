@@ -15,6 +15,7 @@ httpcore==1.0.9
 httptools==0.6.4
 httpx==0.28.1
 idna==3.10
+imageio==2.37.0
 iso8601==2.1.0
 Jinja2==3.1.6
 markdown-it-py==4.0.0
@@ -40,6 +41,7 @@ python-dotenv==1.1.1
 python-multipart==0.0.20
 pytz==2025.2
 PyYAML==6.0.2
+rawpy==0.25.1
 rich==14.1.0
 rich-toolkit==0.15.0
 rignore==0.6.4

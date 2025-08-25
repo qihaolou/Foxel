@@ -11,7 +11,7 @@ import base64
 from models import Mount
 from .adapters.registry import runtime_registry
 from api.response import page
-from .thumbnail import is_image_filename
+from .thumbnail import is_image_filename, is_raw_filename
 from services.processors.registry import get as get_processor
 from services.tasks import task_service
 from services.logging import LogService
@@ -341,6 +341,36 @@ async def stream_file(path: str, range_header: str | None):
     adapter, mount, root, rel = await resolve_adapter_and_rel(path)
     if not rel or rel.endswith('/'):
         raise HTTPException(400, detail="Path is a directory")
+    if is_raw_filename(rel):
+        import rawpy
+        from PIL import Image
+        import io
+        try:
+            raw_data = await read_file(path)
+            try:
+                import rawpy
+                with rawpy.imread(io.BytesIO(raw_data)) as raw:
+                    try:
+                        thumb = raw.extract_thumb()
+                    except rawpy.LibRawNoThumbnailError:
+                        thumb = None
+                    
+                    if thumb is not None and thumb.format in [rawpy.ThumbFormat.JPEG, rawpy.ThumbFormat.BITMAP]:
+                        im = Image.open(io.BytesIO(thumb.data))
+                    else:
+                        rgb = raw.postprocess(use_camera_wb=False, use_auto_wb=True, output_bps=8)
+                        im = Image.fromarray(rgb)
+            except Exception as e:
+                print(f"rawpy processing failed: {e}")
+                raise e
+
+            buf = io.BytesIO()
+            im.save(buf, 'JPEG', quality=90)
+            content = buf.getvalue()
+            return Response(content=content, media_type='image/jpeg')
+        except Exception as e:
+            raise HTTPException(500, detail=f"RAW file processing failed: {e}")
+
     stream_impl = getattr(adapter, "stream_file", None)
     if callable(stream_impl):
         return await stream_impl(root, rel, range_header)

@@ -16,11 +16,9 @@ from services.virtual_fs import (
     generate_temp_link_token,
     verify_temp_link_token,
 )
-from services.thumbnail import is_image_filename, get_or_create_thumb
+from services.thumbnail import is_image_filename, get_or_create_thumb, is_raw_filename
 from schemas import MkdirRequest, MoveRequest
 from api.response import success
-from services.ai import get_text_embedding
-from services.vector_db import VectorDBService
 
 router = APIRouter(prefix='/api/fs', tags=["virtual-fs"])
 
@@ -32,6 +30,24 @@ async def get_file(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
     full_path = '/' + full_path if not full_path.startswith('/') else full_path
+
+    if is_raw_filename(full_path):
+        import rawpy
+        from PIL import Image
+        import io
+        try:
+            raw_data = await read_file(full_path)
+            with rawpy.imread(io.BytesIO(raw_data)) as raw:
+                rgb = raw.postprocess(use_camera_wb=True, output_bps=8)
+            im = Image.fromarray(rgb)
+            buf = io.BytesIO()
+            im.save(buf, 'JPEG', quality=90)
+            content = buf.getvalue()
+            return Response(content=content, media_type='image/jpeg')
+        except FileNotFoundError:
+            raise HTTPException(404, detail="File not found")
+        except Exception as e:
+            raise HTTPException(500, detail=f"RAW file processing failed: {e}")
 
     try:
         content = await read_file(full_path)
