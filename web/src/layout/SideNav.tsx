@@ -1,9 +1,9 @@
-import { Layout, Menu, theme, Button } from 'antd';
+import { Layout, Menu, theme, Button, Modal } from 'antd';
 import { navGroups } from './nav.ts';
 import type { NavItem, NavGroup } from './nav.ts';
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { useSystemStatus } from '../contexts/SystemContext.tsx';
-import { MenuFoldOutlined } from '@ant-design/icons';
+import { GithubOutlined, MenuFoldOutlined, SendOutlined, WechatOutlined } from '@ant-design/icons';
 import '../styles/sider-menu.css';
 
 const { Sider } = Layout;
@@ -18,79 +18,136 @@ export interface SideNavProps {
 const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle }: SideNavProps) {
   const status = useSystemStatus();
   const { token } = theme.useToken();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   return (
-    <Sider
-      collapsedWidth={60}
-      collapsible
-      trigger={null}
-      collapsed={collapsed}
-      width={208}
-      style={{ background: token.colorBgContainer, borderRight: `1px solid ${token.colorBorderSecondary}` }}
-    >
-      <div style={{
-        height: 56,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: collapsed ? 'center' : 'space-between',
-        padding: '0 14px',
-        fontWeight: 600,
-        fontSize: 18,
-        letterSpacing: .5
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img
-            src={status?.logo}
-            alt="Foxel"
-            style={{
-              width: 24,
-              height: 24,
-              objectFit: 'contain',
-              marginRight: collapsed ? 0 : 8,
-              ...(status?.logo?.endsWith('.svg') && { filter: 'brightness(0) saturate(100%)' })
-            }}
-          />
-          {!collapsed && <span style={{ fontWeight: 700 }}>{status?.title}</span>}
-        </div>
-        {/* 展开时显示收缩按钮 */}
-        {!collapsed && (
-          <Button
-            type="text"
-            icon={<MenuFoldOutlined />}
-            onClick={onToggle}
-            style={{ fontSize: 18 }}
-          />
-        )}
-      </div>
-      {/* 分组渲染 */}
-      <div style={{ overflowY: 'auto', height: 'calc(100% - 56px)', padding: '4px 4px 8px' }}>
-        {navGroups.map((group: NavGroup) => (
-          <div key={group.key} style={{ marginBottom: 12 }}>
-            {group.title && (
-              <div
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  letterSpacing: .5,
-                  padding: '6px 10px 4px',
-                  color: token.colorTextTertiary,
-                  textTransform: 'uppercase'
-                }}
-              >{group.title}</div>
-            )}
-            <Menu
-              mode="inline"
-              selectable
-              inlineIndent={12}
-              selectedKeys={[activeKey]}
-              onClick={(e) => onChange(e.key)}
-              items={group.children.map((i: NavItem) => ({ key: i.key, icon: i.icon, label: i.label }))}
-              style={{ borderInline: 'none', background: 'transparent' }}
-              className="sider-menu-group foxel-sider-menu"
+    <>
+      <Sider
+        collapsedWidth={60}
+        collapsible
+        trigger={null}
+        collapsed={collapsed}
+        width={208}
+        style={{
+          background: token.colorBgContainer,
+          borderRight: `1px solid ${token.colorBorderSecondary}`,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <div style={{
+          height: 56,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: collapsed ? 'center' : 'space-between',
+          padding: '0 14px',
+          fontWeight: 600,
+          fontSize: 18,
+          letterSpacing: .5,
+          flexShrink: 0
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <img
+              src={status?.logo}
+              alt="Foxel"
+              style={{
+                width: 24,
+                height: 24,
+                objectFit: 'contain',
+                marginRight: collapsed ? 0 : 8,
+                ...(status?.logo?.endsWith('.svg') && { filter: 'brightness(0) saturate(100%)' })
+              }}
             />
+            {!collapsed && <span style={{ fontWeight: 700 }}>{status?.title}</span>}
           </div>
-        ))}
-      </div>
-    </Sider>
+          {/* 展开时显示收缩按钮 */}
+          {!collapsed && (
+            <Button
+              type="text"
+              icon={<MenuFoldOutlined />}
+              onClick={onToggle}
+              style={{ fontSize: 18 }}
+            />
+          )}
+        </div>
+        {/* 分组渲染 */}
+        <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', padding: '4px 4px 8px' }}>
+          {navGroups.map((group: NavGroup) => (
+            <div key={group.key} style={{ marginBottom: 12 }}>
+              {group.title && (
+                <div
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 600,
+                    letterSpacing: .5,
+                    padding: '6px 10px 4px',
+                    color: token.colorTextTertiary,
+                    textTransform: 'uppercase'
+                  }}
+                >{group.title}</div>
+              )}
+              <Menu
+                mode="inline"
+                selectable
+                inlineIndent={12}
+                selectedKeys={[activeKey]}
+                onClick={(e) => onChange(e.key)}
+                items={group.children.map((i: NavItem) => ({ key: i.key, icon: i.icon, label: i.label }))}
+                style={{ borderInline: 'none', background: 'transparent' }}
+                className="sider-menu-group foxel-sider-menu"
+              />
+            </div>
+          ))}
+        </div>
+        <div
+          style={{
+            bottom: '10px',
+            position: 'absolute',
+            width: '100%',
+            padding: '12px 8px',
+            display: 'flex',
+            justifyContent: 'center',
+            gap: 8,
+            flexShrink: 0,
+            borderTop: `1px solid ${token.colorBorderSecondary}`
+          }}
+        >
+          <Button
+            shape="circle"
+            icon={<GithubOutlined />}
+            href="https://github.com/DrizzleTime/Foxel"
+            target="_blank"
+          />
+          <Button
+            shape="circle"
+            icon={<WechatOutlined />}
+            onClick={() => setIsModalOpen(true)}
+          />
+          <Button
+            shape="circle"
+            icon={<SendOutlined />}
+            href="https://t.me/+thDsBfyqJxZkNTU1"
+            target="_blank"
+          />
+        </div>
+      </Sider>
+      <Modal
+        open={isModalOpen}
+        onCancel={() => setIsModalOpen(false)}
+        title="加入社区"
+        footer={null}
+        width={320}
+      >
+        <div style={{ textAlign: 'center', padding: '12px 0' }}>
+          <img src="https://foxel.cc/image/wechat.png" width={200} alt="wechat" />
+          <div style={{ marginTop: 12, color: token.colorTextSecondary }}>
+            微信扫码加入交流群
+          </div>
+          <div style={{ marginTop: 8, fontSize: 12, color: token.colorTextTertiary }}>
+            如二维码失效，请添加 drizzle2001 拉群
+          </div>
+        </div>
+      </Modal>
+    </>
   );
 });
 

@@ -66,7 +66,7 @@ export const ShareModal = memo(function ShareModal({ entries, path, open, onOk, 
     message.success('已复制到剪贴板');
   };
 
-  const shareUrl = createdShare ? `${window.location.origin}/s/${createdShare.token}` : '';
+  const shareUrl = createdShare ? `${window.location.origin}/share/${createdShare.token}` : '';
 
   const renderForm = () => (
     <Form form={form} layout="vertical" initialValues={{ name: defaultName, accessType: 'public', expiresInDays: 7 }}>

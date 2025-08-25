@@ -18,7 +18,6 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  navKey,
   path,
   loading,
   uploading,
@@ -95,7 +94,7 @@ export const Header: React.FC<HeaderProps> = ({
     <Flex align="center" justify="space-between" style={{ padding: '10px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}`, gap: 12 }}>
       <Flex align="center" gap={8} style={{ flexWrap: 'wrap', flex: 1, overflow: 'hidden' }}>
         <Button size="small" icon={<ArrowUpOutlined />} onClick={onGoUp} disabled={path === '/'} />
-        <Typography.Text strong>{navKey}</Typography.Text>
+        <Typography.Text strong>文件管理</Typography.Text>
         <Divider type="vertical" />
         {renderBreadcrumb()}
       </Flex>
