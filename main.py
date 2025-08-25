@@ -2,12 +2,13 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import FastAPI
+from services.middleware.exception_handler import global_exception_handler
+from services.middleware.logging_middleware import LoggingMiddleware
+from fastapi import FastAPI, Request
 from api.routers import include_routers
 from db.session import close_db, init_db
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
-from api.middleware import LoggingMiddleware
 from services.adapters.registry import runtime_registry
 
 
@@ -29,6 +30,7 @@ def create_app() -> FastAPI:
     )
     include_routers(app)
     app.add_middleware(LoggingMiddleware)
+    app.add_exception_handler(Exception, global_exception_handler)
     return app
 
 
