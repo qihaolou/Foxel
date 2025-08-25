@@ -72,5 +72,5 @@ async function request<T = any>(url: string, options: RequestOptions = {}): Prom
 
 export { vfsApi, type VfsEntry, type DirListing } from './vfs';
 export { adaptersApi, type AdapterItem, type AdapterTypeField, type AdapterTypeMeta } from './adapters';
-export { shareApi } from './share';
+export { shareApi, type ShareInfo, type ShareInfoWithPassword } from './share';
 export default request;

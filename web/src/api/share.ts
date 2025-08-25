@@ -11,6 +11,10 @@ export interface ShareInfo {
   access_type: 'public' | 'password';
 }
 
+export interface ShareInfoWithPassword extends ShareInfo {
+  password?: string;
+}
+
 export interface ShareCreatePayload {
   name: string;
   paths: string[];
@@ -20,7 +24,7 @@ export interface ShareCreatePayload {
 }
 
 export const shareApi = {
-  create: (payload: ShareCreatePayload) => request<ShareInfo>('/shares', { method: 'POST', json: payload }),
+  create: (payload: ShareCreatePayload) => request<ShareInfoWithPassword>('/shares', { method: 'POST', json: payload }),
   list: () => request<ShareInfo[]>('/shares'),
   remove: (shareId: number) => request<void>(`/shares/${shareId}`, { method: 'DELETE' }),
   get: (token: string) => request<ShareInfo>(`/s/${token}`),

@@ -41,9 +41,14 @@ class ShareInfo(BaseModel):
             access_type=obj.access_type,
         )
 
+
+class ShareInfoWithPassword(ShareInfo):
+    password: Optional[str] = None
+
+
 # --- Management Routes ---
 
-@router.post("", response_model=ShareInfo)
+@router.post("", response_model=ShareInfoWithPassword)
 async def create_share(
     payload: ShareCreate,
     current_user: User = Depends(get_current_active_user),
@@ -60,7 +65,12 @@ async def create_share(
         access_type=payload.access_type,
         password=payload.password,
     )
-    return ShareInfo.from_orm(share)
+    share_info_base = ShareInfo.from_orm(share)
+    response_data = share_info_base.model_dump()
+    if payload.access_type == "password" and payload.password:
+        response_data['password'] = payload.password
+    
+    return response_data
 
 
 @router.get("", response_model=List[ShareInfo])
