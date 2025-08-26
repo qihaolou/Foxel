@@ -4,7 +4,7 @@ import PageCard from '../../components/PageCard';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import { backupApi } from '../../api/backup';
 
-const { Title, Paragraph, Text } = Typography;
+const { Paragraph, Text } = Typography;
 
 const BackupPage = memo(function BackupPage() {
   const [loading, setLoading] = useState(false);

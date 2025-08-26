@@ -38,11 +38,15 @@ mkdir -p data/mount
 chmod 777 data/db data/mount
 ```
 
-2. **下载 Docker Compose 文件**:
+2. **下载 Docker Compose 文件**：
 
   ```bash
   curl -L -O https://github.com/DrizzleTime/Foxel/raw/main/compose.yaml
   ```
+
+  下载完成后，**强烈建议**修改 `compose.yaml` 文件中的环境变量以确保安全：
+
+- 修改 `SECRET_KEY` 和 `TEMP_LINK_SECRET_KEY`：将默认的密钥替换为随机生成的强密钥
 
 3. **启动服务**:
 

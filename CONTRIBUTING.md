@@ -16,7 +16,6 @@
   - [依赖准备](#依赖准备)
   - [后端 (FastAPI)](#后端-fastapi)
   - [前端 (React + Vite)](#前端-react--vite)
-  - [使用 Docker Compose (推荐)](#使用-docker-compose-推荐)
 - [代码贡献指南](#代码贡献指南)
   - [贡献存储适配器 (Adapter)](#贡献存储适配器-adapter)
   - [贡献前端应用 (App)](#贡献前端应用-app)
