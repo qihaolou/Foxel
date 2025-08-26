@@ -1,5 +1,6 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Table, Card, message, Tag, Input, Select, Button, Space, Modal, DatePicker } from 'antd';
+import { Table, message, Tag, Input, Select, Button, Space, Modal, DatePicker } from 'antd';
+import PageCard from '../components/PageCard';
 import { logsApi, type LogItem, type PaginatedLogs } from '../api/logs';
 import { format, formatISO } from 'date-fns';
 
@@ -87,9 +88,8 @@ const LogsPage = memo(function LogsPage() {
   ];
 
   return (
-    <Card
+    <PageCard
       title="系统日志"
-      style={{ margin: 0 }}
       extra={
         <Space>
           <RangePicker
@@ -148,7 +148,7 @@ const LogsPage = memo(function LogsPage() {
           </pre>
         )}
       </Modal>
-    </Card>
+    </PageCard>
   );
 });
 

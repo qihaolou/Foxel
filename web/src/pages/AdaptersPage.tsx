@@ -1,5 +1,6 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Table, Button, Space, Drawer, Form, Input, Switch, message, Typography, Popconfirm, Select, Card } from 'antd';
+import { Table, Button, Space, Drawer, Form, Input, Switch, message, Typography, Popconfirm, Select } from 'antd';
+import PageCard from '../components/PageCard';
 import { adaptersApi } from '../api/client';
 
 interface AdapterItem {
@@ -207,9 +208,8 @@ const AdaptersPage = memo(function AdaptersPage() {
   }
 
   return (
-    <Card
+    <PageCard
       title="存储适配器"
-      style={{ margin: 0 }}
       extra={
         <Space>
           <Button onClick={fetchList} loading={loading}>刷新</Button>
@@ -274,7 +274,7 @@ const AdaptersPage = memo(function AdaptersPage() {
           {renderConfigFields()}
         </Form>
       </Drawer>
-    </Card>
+    </PageCard>
   );
 });
 

@@ -1,5 +1,6 @@
-import { Card, Form, Input, Button, message, Tabs, Space } from 'antd';
+import { Form, Input, Button, message, Tabs, Space } from 'antd';
 import { useEffect, useState } from 'react';
+import PageCard from '../../components/PageCard';
 import { getAllConfig, setConfig } from '../../api/config';
 import { API_BASE_URL } from '../../api/client';
 import { AppstoreOutlined, RobotOutlined } from '@ant-design/icons';
@@ -42,11 +43,11 @@ export default function SystemSettingsPage() {
 
   // 加载中时不渲染表单
   if (!config) {
-    return <Card title='系统设置'><div>加载中...</div></Card>;
+    return <PageCard title='系统设置'><div>加载中...</div></PageCard>;
   }
 
   return (
-    <Card
+    <PageCard
     title='系统设置'
     >
       <Space direction="vertical" style={{ width: '100%' }} size={32}>
@@ -121,6 +122,6 @@ export default function SystemSettingsPage() {
           ]}
         />
       </Space>
-    </Card>
+    </PageCard>
   );
 }

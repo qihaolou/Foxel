@@ -1,5 +1,6 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Table, Button, Space, message, Popconfirm, Card, Tag, Tooltip } from 'antd';
+import { Table, Button, Space, message, Popconfirm, Tag, Tooltip } from 'antd';
+import PageCard from '../components/PageCard';
 import { shareApi, type ShareInfo } from '../api/share';
 import { format, parseISO } from 'date-fns';
 import { LinkOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
@@ -92,9 +93,8 @@ const SharePage = memo(function SharePage() {
   ];
 
   return (
-    <Card
+    <PageCard
       title="我的分享"
-      style={{ margin: 0 }}
       extra={<Button onClick={fetchList} loading={loading}>刷新</Button>}
     >
       <Table
@@ -104,7 +104,7 @@ const SharePage = memo(function SharePage() {
         loading={loading}
         pagination={false}
       />
-    </Card>
+    </PageCard>
   );
 });
 

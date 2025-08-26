@@ -1,5 +1,6 @@
 import { memo, useState } from 'react';
-import { Card, Button, Typography, Upload, message, Modal } from 'antd';
+import { Button, Typography, Upload, message, Modal } from 'antd';
+import PageCard from '../../components/PageCard';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import { backupApi } from '../../api/backup';
 
@@ -49,13 +50,10 @@ const BackupPage = memo(function BackupPage() {
   };
 
   return (
-    <Card>
-      <Title level={4}>备份与恢复</Title>
-      <Paragraph>
-        在这里，您可以导出整个站点的数据作为备份，或从备份文件中恢复。
-      </Paragraph>
+    <PageCard title="备份和恢复">
+
       <div style={{ display: 'flex', gap: '16px' }}>
-        <Card title="导出" style={{ flex: 1 }}>
+        <PageCard title="导出" style={{ flex: 1 }}>
           <Paragraph>
             点击下面的按钮将所有数据（包括存储、用户、自动化任务和分享）导出为一个 JSON 文件。
             <Text strong>请妥善保管您的备份文件。</Text>
@@ -67,8 +65,8 @@ const BackupPage = memo(function BackupPage() {
           >
             导出备份
           </Button>
-        </Card>
-        <Card title="恢复" style={{ flex: 1 }}>
+        </PageCard>
+        <PageCard title="恢复" style={{ flex: 1 }}>
           <Paragraph>
             从之前导出的JSON文件恢复数据。
             <Text strong type="danger">警告：此操作将清除并覆盖现有数据。</Text>
@@ -81,9 +79,9 @@ const BackupPage = memo(function BackupPage() {
               选择文件并恢复
             </Button>
           </Upload>
-        </Card>
+        </PageCard>
       </div>
-    </Card>
+    </PageCard>
   );
 });
 
