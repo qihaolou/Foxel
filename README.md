@@ -16,6 +16,12 @@
   </blockquote>
 </div>
 
+## 👀 在线体验
+
+> [https://demo.foxel.cc](https://demo.foxel.cc)
+>
+> 账号/密码：`admin` / `admin`
+
 ## ✨ 核心功能
 
 - **统一文件管理**：集中管理分布于不同存储后端的文件。
