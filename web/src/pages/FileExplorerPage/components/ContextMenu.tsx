@@ -4,7 +4,7 @@ import type { VfsEntry } from '../../../api/client';
 import { getAppsForEntry, getDefaultAppForEntry } from '../../../apps/registry';
 import {
   FolderFilled, AppstoreOutlined, AppstoreAddOutlined, DownloadOutlined,
-  EditOutlined, DeleteOutlined, InfoCircleOutlined, UploadOutlined, PlusOutlined, ShareAltOutlined
+  EditOutlined, DeleteOutlined, InfoCircleOutlined, UploadOutlined, PlusOutlined, ShareAltOutlined, LinkOutlined
 } from '@ant-design/icons';
 
 interface ContextMenuProps {
@@ -25,6 +25,7 @@ interface ContextMenuProps {
   onUpload: () => void;
   onCreateDir: () => void;
   onShare: (entries: VfsEntry[]) => void;
+  onGetDirectLink: (entry: VfsEntry) => void;
 }
 
 export const ContextMenu: React.FC<ContextMenuProps> = (props) => {
@@ -85,6 +86,13 @@ export const ContextMenu: React.FC<ContextMenuProps> = (props) => {
         label: '分享',
         icon: <ShareAltOutlined />,
         onClick: () => actions.onShare(targetEntries),
+      },
+      {
+        key: 'directLink',
+        label: '获取直链',
+        icon: <LinkOutlined />,
+        disabled: targetEntries.length !== 1 || targetEntries[0].is_dir,
+        onClick: () => actions.onGetDirectLink(targetEntries[0]),
       },
       {
         key: 'download',

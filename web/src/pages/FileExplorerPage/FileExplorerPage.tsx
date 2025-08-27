@@ -9,6 +9,7 @@ import { useAppWindows } from './hooks/useAppWindows.tsx';
 import { useContextMenu } from './hooks/useContextMenu';
 import { useProcessor } from './hooks/useProcessor';
 import { useThumbnails } from './hooks/useThumbnails';
+import { useUploader } from './hooks/useUploader';
 import { Header } from './components/Header';
 import { GridView } from './components/GridView';
 import { FileListView } from './components/FileListView';
@@ -17,7 +18,9 @@ import { ContextMenu } from './components/ContextMenu';
 import { CreateDirModal } from './components/Modals/CreateDirModal';
 import { RenameModal } from './components/Modals/RenameModal';
 import { ProcessorModal } from './components/Modals/ProcessorModal';
+import UploadModal from './components/Modals/UploadModal';
 import { ShareModal } from './components/Modals/ShareModal';
+import { DirectLinkModal } from './components/Modals/DirectLinkModal';
 import { FileDetailModal } from './components/FileDetailModal';
 import type { ViewMode } from './types';
 import { vfsApi, type VfsEntry } from '../../api/client';
@@ -30,9 +33,10 @@ const FileExplorerPage = memo(function FileExplorerPage() {
   // --- Hooks ---
   const { path, entries, loading, pagination, processorTypes, load, navigateTo, goUp, handlePaginationChange, refresh } = useFileExplorer(navKey);
   const { selectedEntries, handleSelect, handleSelectRange, clearSelection, setSelectedEntries } = useFileSelection();
-  const { uploading, fileInputRef, doCreateDir, doDelete, doRename, doDownload, doShare, handleUploadClick, handleFilesSelected } = useFileActions({ path, refresh, clearSelection, onShare: (entries) => setSharingEntries(entries) });
+  const { doCreateDir, doDelete, doRename, doDownload, doShare, doGetDirectLink } = useFileActions({ path, refresh, clearSelection, onShare: (entries) => setSharingEntries(entries), onGetDirectLink: (entry) => setDirectLinkEntry(entry) });
   const { appWindows, openFileWithDefaultApp, confirmOpenWithApp, closeWindow, toggleMax, bringToFront, updateWindow } = useAppWindows(path);
   const { ctxMenu, blankCtxMenu, openContextMenu, openBlankContextMenu, closeContextMenus } = useContextMenu();
+  const uploader = useUploader(path, refresh);
   const processorHook = useProcessor({ path, processorTypes, refresh });
   const { thumbs } = useThumbnails(entries, path);
 
@@ -41,6 +45,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
   const [renaming, setRenaming] = useState<VfsEntry | null>(null);
   const [sharingEntries, setSharingEntries] = useState<VfsEntry[]>([]);
   const [detailEntry, setDetailEntry] = useState<VfsEntry | null>(null);
+  const [directLinkEntry, setDirectLinkEntry] = useState<VfsEntry | null>(null);
   const [detailData, setDetailData] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -91,17 +96,16 @@ const FileExplorerPage = memo(function FileExplorerPage() {
         navKey={navKey}
         path={path}
         loading={loading}
-        uploading={uploading}
         viewMode={viewMode}
         onGoUp={goUp}
         onNavigate={navigateTo}
         onRefresh={refresh}
         onCreateDir={() => setCreatingDir(true)}
-        onUpload={handleUploadClick}
+        onUpload={uploader.openModal}
         onSetViewMode={setViewMode}
       />
 
-      <input ref={fileInputRef} type="file" style={{ display: 'none' }} multiple onChange={handleFilesSelected} />
+      <input ref={uploader.fileInputRef} type="file" style={{ display: 'none' }} multiple onChange={uploader.handleFileChange} />
 
       <div style={{ flex: 1, overflow: 'auto', paddingBottom: pagination.total > 0 ? '80px' : '0' }} onContextMenu={openBlankContextMenu}>
         {loading && entries.length === 0 ? (
@@ -155,6 +159,12 @@ const FileExplorerPage = memo(function FileExplorerPage() {
           onCancel={() => setSharingEntries([])}
         />
       )}
+      <DirectLinkModal
+        entry={directLinkEntry}
+        path={path}
+        open={!!directLinkEntry}
+        onCancel={() => setDirectLinkEntry(null)}
+      />
       <ProcessorModal
         entry={processorHook.processorModal.entry}
         visible={processorHook.processorModal.visible}
@@ -191,12 +201,18 @@ const FileExplorerPage = memo(function FileExplorerPage() {
             processorHook.setSelectedProcessor(type);
             processorHook.openProcessorModal(entry);
           }}
-          onUpload={handleUploadClick}
+          onUpload={uploader.openModal}
           onCreateDir={() => setCreatingDir(true)}
           onShare={doShare}
+          onGetDirectLink={doGetDirectLink}
         />
       )}
-
+      <UploadModal
+        visible={uploader.isModalVisible}
+        files={uploader.files}
+        onClose={uploader.closeModal}
+        onStartUpload={uploader.startUpload}
+      />
       <AppWindowsLayer windows={appWindows} onClose={closeWindow} onToggleMax={toggleMax} onBringToFront={bringToFront} onUpdateWindow={updateWindow} />
     </div>
   );

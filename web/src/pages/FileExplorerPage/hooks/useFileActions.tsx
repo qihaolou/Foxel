@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import { useCallback } from 'react';
 import { message, Modal } from 'antd';
 import { vfsApi, type VfsEntry } from '../../../api/client';
 
@@ -7,12 +7,10 @@ interface FileActionsParams {
   refresh: () => void;
   clearSelection: () => void;
   onShare: (entries: VfsEntry[]) => void;
+  onGetDirectLink: (entry: VfsEntry) => void;
 }
 
-export function useFileActions({ path, refresh, clearSelection, onShare }: FileActionsParams) {
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
-
+export function useFileActions({ path, refresh, clearSelection, onShare, onGetDirectLink }: FileActionsParams) {
   const doCreateDir = useCallback(async (name: string) => {
     if (!name.trim()) {
       message.warning('请输入名称');
@@ -78,42 +76,6 @@ export function useFileActions({ path, refresh, clearSelection, onShare }: FileA
     }
   }, [path]);
 
-  const handleUploadClick = useCallback(() => {
-    if (uploading) return;
-    fileInputRef.current?.click();
-  }, [uploading]);
-
-  const handleFilesSelected = useCallback(async (ev: React.ChangeEvent<HTMLInputElement>) => {
-    const files = ev.target.files;
-    if (!files || files.length === 0) return;
-    const dir = path === '/' ? '' : path;
-    setUploading(true);
-    const uploadedNames: string[] = [];
-    try {
-      for (const file of Array.from(files)) {
-        const dest = (dir + '/' + file.name).replace(/\/+/g, '/');
-        const key = 'upload-' + file.name;
-        await vfsApi.uploadStream(dest, file, true, (loaded, total) => {
-          const pct = total ? (loaded / total * 100) : 0;
-          message.open({
-            key,
-            type: 'loading',
-            content: `上传 ${file.name} ${pct.toFixed(1)}%`
-          });
-        });
-        message.open({ key, type: 'success', content: `上传完成: ${file.name}`, duration: 2 });
-        uploadedNames.push(file.name);
-      }
-      refresh();
-      // You might want to select the new files after upload, this can be handled in the main component
-    } catch (e: any) {
-      message.error(e.message || '上传失败');
-    } finally {
-      setUploading(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  }, [path, refresh]);
-
   const doShare = useCallback((entries: VfsEntry[]) => {
     if (entries.length === 0) {
       message.warning('请选择要分享的文件或目录');
@@ -122,15 +84,20 @@ export function useFileActions({ path, refresh, clearSelection, onShare }: FileA
     onShare(entries);
   }, [onShare]);
 
+  const doGetDirectLink = useCallback((entry: VfsEntry) => {
+    if (entry.is_dir) {
+      message.warning('不支持获取目录的直链');
+      return;
+    }
+    onGetDirectLink(entry);
+  }, [onGetDirectLink]);
+
   return {
-    uploading,
-    fileInputRef,
     doCreateDir,
     doDelete,
     doRename,
     doDownload,
     doShare,
-    handleUploadClick,
-    handleFilesSelected,
+    doGetDirectLink,
   };
 }

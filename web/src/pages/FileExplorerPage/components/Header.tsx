@@ -7,7 +7,6 @@ interface HeaderProps {
   navKey: string;
   path: string;
   loading: boolean;
-  uploading: boolean;
   viewMode: ViewMode;
   onGoUp: () => void;
   onNavigate: (path: string) => void;
@@ -20,7 +19,6 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   path,
   loading,
-  uploading,
   viewMode,
   onGoUp,
   onNavigate,
@@ -101,7 +99,7 @@ export const Header: React.FC<HeaderProps> = ({
       <Space size={8} wrap>
         <Button size="small" icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>刷新</Button>
         <Button size="small" icon={<PlusOutlined />} onClick={onCreateDir}>新建目录</Button>
-        <Button size="small" icon={<UploadOutlined />} loading={uploading} onClick={onUpload}>上传</Button>
+        <Button size="small" icon={<UploadOutlined />} onClick={onUpload}>上传</Button>
         <Segmented
           size="small"
           value={viewMode}

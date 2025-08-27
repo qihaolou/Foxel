@@ -145,11 +145,12 @@ async def stream_endpoint(
 @router.get("/temp-link/{full_path:path}")
 async def get_temp_link(
     full_path: str,
-    current_user: Annotated[User, Depends(get_current_active_user)]
+    current_user: Annotated[User, Depends(get_current_active_user)],
+    expires_in: int = Query(3600, description="有效时间(秒), 0或负数表示永久")
 ):
     """获取文件的临时公开访问令牌"""
     full_path = '/' + full_path if not full_path.startswith('/') else full_path
-    token = await generate_temp_link_token(full_path)
+    token = await generate_temp_link_token(full_path, expires_in=expires_in)
     return success({"token": token, "path": full_path})
 
 
