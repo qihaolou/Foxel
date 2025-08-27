@@ -25,3 +25,7 @@ export interface SystemStatus {
 export async function status() {
   return request<SystemStatus>('/config/status');
 }
+
+export async function getLatestVersion() {
+  return request<{ latest_version: string | null, body: string | null }>('/config/latest-version');
+}

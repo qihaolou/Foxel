@@ -17,7 +17,7 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             try:
                 if token_str and token_str.startswith("Bearer "):
                     token = token_str.split(" ")[1]
-                    payload = jwt.decode(token, ConfigCenter.get_secret_key("SECRET_KEY"), algorithms=[ALGORITHM])
+                    payload = jwt.decode(token, await ConfigCenter.get_secret_key("SECRET_KEY"), algorithms=[ALGORITHM])
                     username = payload.get("sub")
                     if username:
                         user_account = await UserAccount.get_or_none(username=username)

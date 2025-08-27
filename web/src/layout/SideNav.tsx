@@ -1,11 +1,19 @@
-import { Layout, Menu, theme, Button, Modal } from 'antd';
+import { Layout, Menu, theme, Button, Modal, Tag, Tooltip } from 'antd';
 import { navGroups } from './nav.ts';
 import type { NavItem, NavGroup } from './nav.ts';
-import { memo, useState } from 'react';
+import { memo, useEffect, useState } from 'react';
 import { useSystemStatus } from '../contexts/SystemContext.tsx';
-import { GithubOutlined, MenuFoldOutlined, SendOutlined, WechatOutlined } from '@ant-design/icons';
+import {
+  CheckCircleOutlined,
+  GithubOutlined,
+  MenuFoldOutlined,
+  SendOutlined,
+  WechatOutlined,
+  WarningOutlined
+} from '@ant-design/icons';
 import '../styles/sider-menu.css';
-
+import { getLatestVersion } from '../api/config.ts';
+import ReactMarkdown from 'react-markdown';
 const { Sider } = Layout;
 
 export interface SideNavProps {
@@ -19,6 +27,28 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
   const status = useSystemStatus();
   const { token } = theme.useToken();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
+  const [latestVersion, setLatestVersion] = useState<{
+    version: string;
+    body: string;
+  } | null>(null);
+
+  useEffect(() => {
+    getLatestVersion().then(resp => {
+      if (resp.latest_version && resp.body) {
+        setLatestVersion({
+          version: resp.latest_version,
+          body: resp.body
+        });
+      }
+    });
+  }, []);
+
+  const showVersionModal = () => {
+    setIsVersionModalOpen(true);
+  };
+
+  const hasUpdate = latestVersion && latestVersion.version !== status?.version;
   return (
     <>
       <Sider
@@ -105,29 +135,72 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
             width: '100%',
             padding: '12px 8px',
             display: 'flex',
-            justifyContent: 'center',
-            gap: 8,
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
             flexShrink: 0,
             borderTop: `1px solid ${token.colorBorderSecondary}`
           }}
         >
-          <Button
-            shape="circle"
-            icon={<GithubOutlined />}
-            href="https://github.com/DrizzleTime/Foxel"
-            target="_blank"
-          />
-          <Button
-            shape="circle"
-            icon={<WechatOutlined />}
-            onClick={() => setIsModalOpen(true)}
-          />
-          <Button
-            shape="circle"
-            icon={<SendOutlined />}
-            href="https://t.me/+thDsBfyqJxZkNTU1"
-            target="_blank"
-          />
+          <div style={{
+            fontSize: 12,
+            color: token.colorTextSecondary,
+            textAlign: 'center',
+            height: 22,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer'
+          }} onClick={showVersionModal}>
+            {hasUpdate ? (
+              <Tooltip title={`发现新版本: ${latestVersion?.version}`} placement={collapsed ? 'right' : 'top'}>
+                <a href="https://github.com/DrizzleTime/Foxel/releases" target="_blank" rel="noopener noreferrer"
+                   style={{ textDecoration: 'none' }}>
+                  {collapsed ? (
+                    <Tag icon={<WarningOutlined />} color="warning" style={{ marginInlineEnd: 0 }} />
+                  ) : (
+                    <Tag icon={<WarningOutlined />} color="warning">
+                      {status?.version} - 有更新 [{latestVersion?.version}]
+                    </Tag>
+                  )}
+                </a>
+              </Tooltip>
+            ) : (
+              latestVersion ? (
+                <Tooltip title={`当前为最新版: ${status?.version}`} placement={collapsed ? 'right' : 'top'}>
+                  {collapsed ? (
+                    <Tag icon={<CheckCircleOutlined />} color="success" style={{ marginInlineEnd: 0 }} />
+                  ) : (
+                    <Tag icon={<CheckCircleOutlined />} color="success">
+                      已是最新版
+                    </Tag>
+                  )}
+                </Tooltip>
+              ) : (
+                collapsed ? null : <Tag>{status?.version}</Tag>
+              )
+            )}
+          </div>
+          <div style={{ display: 'flex', flexDirection: collapsed ? 'column' : 'row', gap: 8 }}>
+            <Button
+              shape="circle"
+              icon={<GithubOutlined />}
+              href="https://github.com/DrizzleTime/Foxel"
+              target="_blank"
+            />
+            <Button
+              shape="circle"
+              icon={<WechatOutlined />}
+              onClick={() => setIsModalOpen(true)}
+            />
+            <Button
+              shape="circle"
+              icon={<SendOutlined />}
+              href="https://t.me/+thDsBfyqJxZkNTU1"
+              target="_blank"
+            />
+          </div>
+          
         </div>
       </Sider>
       <Modal
@@ -145,6 +218,22 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
           <div style={{ marginTop: 8, fontSize: 12, color: token.colorTextTertiary }}>
             如二维码失效，请添加 drizzle2001 拉群
           </div>
+        </div>
+      </Modal>
+      <Modal
+        open={isVersionModalOpen}
+        onCancel={() => setIsVersionModalOpen(false)}
+        title="版本信息"
+        footer={null}
+      >
+        <div>
+          <p>当前版本: {status?.version}</p>
+          {latestVersion && (
+            <div>
+              <p>最新版本: {latestVersion.version}</p>
+              <ReactMarkdown>{latestVersion.body}</ReactMarkdown>
+            </div>
+          )}
         </div>
       </Modal>
     </>
