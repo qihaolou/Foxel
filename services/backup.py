@@ -1,4 +1,3 @@
-import json
 from tortoise.transactions import in_transaction
 from models.database import (
     StorageAdapter,
@@ -8,6 +7,8 @@ from models.database import (
     ShareLink,
     Configuration,
 )
+from services.config import VERSION
+
 
 class BackupService:
     @staticmethod
@@ -24,10 +25,13 @@ class BackupService:
             configs = await Configuration.all().values()
 
         for share in shares:
-            share["created_at"] = share["created_at"].isoformat() if share.get("created_at") else None
-            share["expires_at"] = share["expires_at"].isoformat() if share.get("expires_at") else None
+            share["created_at"] = share["created_at"].isoformat(
+            ) if share.get("created_at") else None
+            share["expires_at"] = share["expires_at"].isoformat(
+            ) if share.get("expires_at") else None
 
         return {
+            "version": VERSION,
             "storage_adapters": list(adapters),
             "mounts": list(mounts),
             "user_accounts": list(users),
@@ -54,7 +58,7 @@ class BackupService:
                     [Configuration(**c) for c in data["configurations"]],
                     using_db=conn
                 )
-            
+
             if data.get("user_accounts"):
                 await UserAccount.bulk_create(
                     [UserAccount(**u) for u in data["user_accounts"]],
@@ -66,13 +70,13 @@ class BackupService:
                     [StorageAdapter(**a) for a in data["storage_adapters"]],
                     using_db=conn
                 )
-            
+
             if data.get("mounts"):
                 await Mount.bulk_create(
                     [Mount(**m) for m in data["mounts"]],
                     using_db=conn
                 )
-            
+
             if data.get("automation_tasks"):
                 await AutomationTask.bulk_create(
                     [AutomationTask(**t) for t in data["automation_tasks"]],

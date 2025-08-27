@@ -2,7 +2,7 @@ import httpx
 import time
 from fastapi import APIRouter, Depends, Form
 from typing import Annotated
-from services.config import ConfigCenter
+from services.config import ConfigCenter, VERSION
 from services.auth import get_current_active_user, User, has_users
 from api.response import success
 router = APIRouter(prefix="/api/config", tags=["config"])
@@ -38,7 +38,7 @@ async def get_all_config(
 @router.get("/status")
 async def get_system_status():
     system_info = {
-        "version": "v1.0.0",
+        "version": VERSION,
         "title": await ConfigCenter.get("APP_NAME", "Foxel"),
         "logo": await ConfigCenter.get("APP_LOGO", "/logo.svg"),
         "is_initialized": await has_users()
@@ -58,7 +58,7 @@ async def get_latest_version():
     if current_time - latest_version_cache["timestamp"] < 3600 and latest_version_cache["data"]:
         return success(latest_version_cache["data"])
     try:
-        async with httpx.AsyncClient(timeout=10.0, proxy="http://127.0.0.1:7897") as client:
+        async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(
                 "https://api.github.com/repos/DrizzleTime/Foxel/releases/latest",
                 follow_redirects=True,
