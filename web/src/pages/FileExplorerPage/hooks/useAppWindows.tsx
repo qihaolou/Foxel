@@ -3,7 +3,7 @@ import { Modal, Checkbox } from 'antd';
 import type { VfsEntry } from '../../../api/client';
 import type { AppDescriptor } from '../../../apps/registry';
 import type { AppWindow } from '../types';
-import { getAppsForEntry, getDefaultAppForEntry } from '../../../apps/registry';
+import { getAppsForEntry, getDefaultAppForEntry, getAppByKey } from '../../../apps/registry';
 
 export function useAppWindows(path: string) {
   const [appWindows, setAppWindows] = useState<AppWindow[]>([]);
@@ -47,7 +47,12 @@ export function useAppWindows(path: string) {
     openWithApp(entry, defaultApp);
   }, [openWithApp]);
 
-  const confirmOpenWithApp = useCallback((entry: VfsEntry, app: AppDescriptor) => {
+  const confirmOpenWithApp = useCallback((entry: VfsEntry, appKey: string) => {
+    const app = getAppByKey(appKey);
+    if (!app) {
+      Modal.error({ title: '错误', content: `应用 "${appKey}" 不存在。` });
+      return;
+    }
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';
     let setDefault = false;
     Modal.confirm({

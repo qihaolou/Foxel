@@ -132,7 +132,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
             onRowClick={(r, e) => handleSelect(r, e.ctrlKey || e.metaKey)}
             onSelectionChange={setSelectedEntries}
             onOpen={handleOpenEntry}
-            onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, { key: appKey, name: '' } as any)}
+            onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, appKey)}
             onRename={setRenaming}
             onDelete={(entry) => doDelete([entry])}
             onContextMenu={openContextMenu}
@@ -192,7 +192,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
           processorTypes={processorTypes}
           onClose={closeContextMenus}
           onOpen={handleOpenEntry}
-          onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, { key: appKey, name: '' } as any)}
+          onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, appKey)}
           onDownload={doDownload}
           onRename={setRenaming}
           onDelete={(entriesToDelete) => doDelete(entriesToDelete)}

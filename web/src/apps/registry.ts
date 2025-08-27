@@ -26,6 +26,10 @@ export function getAppsForEntry(entry: VfsEntry): AppDescriptor[] {
   return apps.filter(a => a.supported(entry));
 }
 
+export function getAppByKey(key: string): AppDescriptor | undefined {
+  return apps.find(a => a.key === key);
+}
+
 export function getDefaultAppForEntry(entry: VfsEntry): AppDescriptor | undefined {
   if (entry.is_dir) return;
   const ext = entry.name.split('.').pop()?.toLowerCase() || '';
