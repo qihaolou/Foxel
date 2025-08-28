@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from tortoise.transactions import in_transaction
 from typing import Annotated
 
-from models import StorageAdapter, Mount
+from models import StorageAdapter
 from schemas import AdapterCreate, AdapterOut
 from services.auth import get_current_active_user, User
 from services.adapters.registry import runtime_registry, get_config_schemas
@@ -39,26 +39,21 @@ async def create_adapter(
     data: AdapterCreate,
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
+    norm_path = AdapterCreate.normalize_mount_path(data.mount_path)
+    exists = await StorageAdapter.get_or_none(path=norm_path)
+    if exists:
+        raise HTTPException(400, detail="Mount path already exists")
+
     adapter_fields = {
         "name": data.name,
         "type": data.type,
         "config": validate_and_normalize_config(data.type, data.config or {}),
         "enabled": data.enabled,
+        "path": norm_path,
+        "sub_path": data.sub_path,
     }
-    norm_path = AdapterCreate.normalize_mount_path(data.mount_path)
-    exists = await Mount.get_or_none(path=norm_path)
-    if exists:
-        raise HTTPException(400, detail="Mount path already exists")
-    async with in_transaction():
-        rec = await StorageAdapter.create(**adapter_fields)
-        await Mount.create(
-            path=norm_path,
-            sub_path=data.sub_path,
-            adapter=rec,
-            enabled=True,
-        )
-    rec.mount_path = norm_path
-    rec.sub_path = data.sub_path
+
+    rec = await StorageAdapter.create(**adapter_fields)
     await runtime_registry.refresh()
     await LogService.action(
         "route:adapters",
@@ -73,20 +68,8 @@ async def create_adapter(
 async def list_adapters(
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    adapters = await StorageAdapter.all().prefetch_related("mounts")
-    out = []
-    for a in adapters:
-        mount = a.mounts[0] if a.mounts else None
-        item = AdapterOut(
-            name=a.name,
-            type=a.type,
-            config=a.config,
-            enabled=a.enabled,
-            id=a.id,
-            mount_path=mount.path if mount else None,
-            sub_path=mount.sub_path if mount else None
-        )
-        out.append(item)
+    adapters = await StorageAdapter.all()
+    out = [AdapterOut.model_validate(a) for a in adapters]
     return success(out)
 
 
@@ -109,13 +92,10 @@ async def get_adapter(
     adapter_id: int,
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    rec = await StorageAdapter.get_or_none(id=adapter_id).prefetch_related("mounts")
+    rec = await StorageAdapter.get_or_none(id=adapter_id)
     if not rec:
         raise HTTPException(404, detail="Not found")
-    mount = rec.mounts[0] if rec.mounts else None
-    rec.mount_path = mount.path if mount else None
-    rec.sub_path = mount.sub_path if mount else None
-    return success(rec)
+    return success(AdapterOut.model_validate(rec))
 
 
 @router.put("/{adapter_id}")
@@ -124,33 +104,23 @@ async def update_adapter(
     data: AdapterCreate,
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-
-    rec = await StorageAdapter.get_or_none(id=adapter_id).prefetch_related("mounts")
+    rec = await StorageAdapter.get_or_none(id=adapter_id)
     if not rec:
         raise HTTPException(404, detail="Not found")
+
     norm_path = AdapterCreate.normalize_mount_path(data.mount_path)
-    existing = await Mount.get_or_none(path=norm_path)
-    mount = rec.mounts[0] if rec.mounts else None
-    if existing and (not mount or existing.id != mount.id):
+    existing = await StorageAdapter.get_or_none(path=norm_path)
+    if existing and existing.id != adapter_id:
         raise HTTPException(400, detail="Mount path already exists")
+
     rec.name = data.name
     rec.type = data.type
     rec.config = validate_and_normalize_config(data.type, data.config or {})
     rec.enabled = data.enabled
+    rec.path = norm_path
+    rec.sub_path = data.sub_path
     await rec.save()
-    if mount:
-        mount.path = norm_path
-        mount.sub_path = data.sub_path
-        await mount.save()
-    else:
-        mount = await Mount.create(
-            path=norm_path,
-            sub_path=data.sub_path,
-            adapter=rec,
-            enabled=True,
-        )
-    rec.mount_path = mount.path
-    rec.sub_path = mount.sub_path
+
     await runtime_registry.refresh()
     await LogService.action(
         "route:adapters",

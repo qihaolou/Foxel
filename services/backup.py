@@ -1,7 +1,6 @@
 from tortoise.transactions import in_transaction
 from models.database import (
     StorageAdapter,
-    Mount,
     UserAccount,
     AutomationTask,
     ShareLink,
@@ -18,7 +17,6 @@ class BackupService:
         """
         async with in_transaction() as conn:
             adapters = await StorageAdapter.all().values()
-            mounts = await Mount.all().values()
             users = await UserAccount.all().values()
             tasks = await AutomationTask.all().values()
             shares = await ShareLink.all().values()
@@ -33,7 +31,6 @@ class BackupService:
         return {
             "version": VERSION,
             "storage_adapters": list(adapters),
-            "mounts": list(mounts),
             "user_accounts": list(users),
             "automation_tasks": list(tasks),
             "share_links": list(shares),
@@ -48,7 +45,6 @@ class BackupService:
         async with in_transaction() as conn:
             await ShareLink.all().using_db(conn).delete()
             await AutomationTask.all().using_db(conn).delete()
-            await Mount.all().using_db(conn).delete()
             await StorageAdapter.all().using_db(conn).delete()
             await UserAccount.all().using_db(conn).delete()
             await Configuration.all().using_db(conn).delete()
@@ -68,12 +64,6 @@ class BackupService:
             if data.get("storage_adapters"):
                 await StorageAdapter.bulk_create(
                     [StorageAdapter(**a) for a in data["storage_adapters"]],
-                    using_db=conn
-                )
-
-            if data.get("mounts"):
-                await Mount.bulk_create(
-                    [Mount(**m) for m in data["mounts"]],
                     using_db=conn
                 )
 

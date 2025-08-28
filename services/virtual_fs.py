@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Dict, Tuple, Any, Union, AsyncIterator
 from fastapi import HTTPException
 import mimetypes
@@ -8,7 +7,7 @@ import hmac
 import hashlib
 import base64
 
-from models import Mount
+from models import StorageAdapter
 from .adapters.registry import runtime_registry
 from api.response import page
 from .thumbnail import is_image_filename, is_raw_filename
@@ -18,16 +17,16 @@ from services.logging import LogService
 from services.config import ConfigCenter
 
 
-async def resolve_mount(path: str) -> Tuple[Mount, str]:
+async def resolve_adapter_by_path(path: str) -> Tuple[StorageAdapter, str]:
     norm = path if path.startswith('/') else '/' + path
-    mounts = await Mount.filter(enabled=True)
+    adapters = await StorageAdapter.filter(enabled=True)
     best = None
-    for m in mounts:
-        if norm == m.path or norm.startswith(m.path.rstrip('/') + '/'):
-            if (best is None) or len(m.path) > len(best.path):
-                best = m
+    for a in adapters:
+        if norm == a.path or norm.startswith(a.path.rstrip('/') + '/'):
+            if (best is None) or len(a.path) > len(best.path):
+                best = a
     if not best:
-        raise HTTPException(404, detail="No mount for path")
+        raise HTTPException(404, detail="No storage adapter for path")
     rel = norm[len(best.path):].lstrip('/')
     return best, rel
 
@@ -35,16 +34,17 @@ async def resolve_mount(path: str) -> Tuple[Mount, str]:
 
 
 async def resolve_adapter_and_rel(path: str):
-    """返回 (adapter_instance, mount, effective_root, rel_path)."""
+    """返回 (adapter_instance, adapter_model, effective_root, rel_path)."""
     norm = path if path.startswith('/') else '/' + path
     try:
-        mount, rel = await resolve_mount(norm)
+        adapter_model, rel = await resolve_adapter_by_path(norm)
     except HTTPException as e:
         raise e
-    await mount.fetch_related("adapter")
-    adapter_instance = runtime_registry.get(mount.adapter_id)
-    effective_root = adapter_instance.get_effective_root(mount.sub_path)
-    return adapter_instance, mount, effective_root, rel
+    adapter_instance = runtime_registry.get(adapter_model.id)
+    if not adapter_instance:
+        raise HTTPException(404, detail=f"Adapter instance not found for ID {adapter_model.id}")
+    effective_root = adapter_instance.get_effective_root(adapter_model.sub_path)
+    return adapter_instance, adapter_model, effective_root, rel
 
 
 async def _ensure_method(adapter: Any, method: str):
@@ -56,27 +56,26 @@ async def _ensure_method(adapter: Any, method: str):
 
 async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) -> Dict:
     norm = (path if path.startswith('/') else '/' + path).rstrip('/') or '/'
-    mounts = await Mount.filter(enabled=True).prefetch_related("adapter")
+    adapters = await StorageAdapter.filter(enabled=True)
 
     child_mount_entries = []
     norm_prefix = norm.rstrip('/')
-    for m in mounts:
-        if m.path == norm:
+    for a in adapters:
+        if a.path == norm:
             continue
-        if m.path.startswith(norm_prefix + '/'):
-            tail = m.path[len(norm_prefix):].lstrip('/')
+        if a.path.startswith(norm_prefix + '/'):
+            tail = a.path[len(norm_prefix):].lstrip('/')
             if '/' not in tail:
                 child_mount_entries.append(tail)
     child_mount_entries = sorted(set(child_mount_entries))
 
     try:
-        mount, rel = await resolve_mount(norm)
-        await mount.fetch_related("adapter")
-        adapter = runtime_registry.get(mount.adapter_id)
-        effective_root = adapter.get_effective_root(mount.sub_path)
+        adapter_model, rel = await resolve_adapter_by_path(norm)
+        adapter_instance = runtime_registry.get(adapter_model.id)
+        effective_root = adapter_instance.get_effective_root(adapter_model.sub_path)
     except HTTPException:
-        mount = None
-        adapter = None
+        adapter_model = None
+        adapter_instance = None
         effective_root = ''
         rel = ''
 
@@ -84,8 +83,8 @@ async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) ->
     adapter_total = 0
     covered = set()
 
-    if mount and adapter:
-        list_dir = await _ensure_method(adapter, "list_dir")
+    if adapter_model and adapter_instance:
+        list_dir = await _ensure_method(adapter_instance, "list_dir")
         try:
             adapter_entries, adapter_total = await list_dir(effective_root, rel, page_num, page_size)
         except NotADirectoryError:
@@ -119,18 +118,18 @@ async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) ->
 
 
 async def read_file(path: str) -> Union[bytes, Any]:
-    adapter, _mount, root, rel = await resolve_adapter_and_rel(path)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
     if rel.endswith('/') or rel == '':
         raise HTTPException(400, detail="Path is a directory")
-    read_func = await _ensure_method(adapter, "read_file")
+    read_func = await _ensure_method(adapter_instance, "read_file")
     return await read_func(root, rel)
 
 
 async def write_file(path: str, data: bytes):
-    adapter, _mount, root, rel = await resolve_adapter_and_rel(path)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
     if rel.endswith('/'):
         raise HTTPException(400, detail="Invalid file path")
-    write_func = await _ensure_method(adapter, "write_file")
+    write_func = await _ensure_method(adapter_instance, "write_file")
     await write_func(root, rel, data)
     await task_service.trigger_tasks("file_written", path)
     await LogService.action(
@@ -139,10 +138,10 @@ async def write_file(path: str, data: bytes):
 
 
 async def write_file_stream(path: str, data_iter: AsyncIterator[bytes], overwrite: bool = True):
-    adapter, _mount, root, rel = await resolve_adapter_and_rel(path)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
     if rel.endswith('/'):
         raise HTTPException(400, detail="Invalid file path")
-    exists_func = getattr(adapter, "exists", None)
+    exists_func = getattr(adapter_instance, "exists", None)
     if not overwrite and callable(exists_func):
         try:
             if await exists_func(root, rel):
@@ -153,7 +152,7 @@ async def write_file_stream(path: str, data_iter: AsyncIterator[bytes], overwrit
             pass
 
     size = 0
-    stream_func = getattr(adapter, "write_file_stream", None)
+    stream_func = getattr(adapter_instance, "write_file_stream", None)
     if callable(stream_func):
         size = await stream_func(root, rel, data_iter)
     else:
@@ -161,7 +160,7 @@ async def write_file_stream(path: str, data_iter: AsyncIterator[bytes], overwrit
         async for chunk in data_iter:
             if chunk:
                 buf.extend(chunk)
-        write_func = await _ensure_method(adapter, "write_file")
+        write_func = await _ensure_method(adapter_instance, "write_file")
         await write_func(root, rel, bytes(buf))
         size = len(buf)
 
@@ -175,35 +174,35 @@ async def write_file_stream(path: str, data_iter: AsyncIterator[bytes], overwrit
 
 
 async def make_dir(path: str):
-    adapter, _mount, root, rel = await resolve_adapter_and_rel(path)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
     if not rel:
         raise HTTPException(400, detail="Cannot create root")
-    mkdir_func = await _ensure_method(adapter, "mkdir")
+    mkdir_func = await _ensure_method(adapter_instance, "mkdir")
     await mkdir_func(root, rel)
     await LogService.action("virtual_fs", f"Created directory {path}", details={"path": path})
 
 
 async def delete_path(path: str):
-    adapter, _mount, root, rel = await resolve_adapter_and_rel(path)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
     if not rel:
         raise HTTPException(400, detail="Cannot delete root")
-    delete_func = await _ensure_method(adapter, "delete")
+    delete_func = await _ensure_method(adapter_instance, "delete")
     await delete_func(root, rel)
     await task_service.trigger_tasks("file_deleted", path)
     await LogService.action("virtual_fs", f"Deleted {path}", details={"path": path})
 
 
 async def move_path(src: str, dst: str, overwrite: bool = False, return_debug: bool = True):
-    adapter_s, mount_s, root_s, rel_s = await resolve_adapter_and_rel(src)
-    adapter_d, mount_d, root_d, rel_d = await resolve_adapter_and_rel(dst)
+    adapter_s, adapter_model_s, root_s, rel_s = await resolve_adapter_and_rel(src)
+    adapter_d, adapter_model_d, root_d, rel_d = await resolve_adapter_and_rel(dst)
     debug_info = {
         "src": src, "dst": dst,
         "rel_s": rel_s, "rel_d": rel_d,
         "root_s": root_s, "root_d": root_d,
         "overwrite": overwrite
     }
-    if mount_s.id != mount_d.id:
-        raise HTTPException(400, detail="Cross-mount move not supported")
+    if adapter_model_s.id != adapter_model_d.id:
+        raise HTTPException(400, detail="Cross-adapter move not supported")
     if not rel_s:
         raise HTTPException(400, detail="Cannot move or rename mount root")
     if not rel_d:
@@ -266,16 +265,16 @@ async def move_path(src: str, dst: str, overwrite: bool = False, return_debug: b
 
 
 async def rename_path(src: str, dst: str, overwrite: bool = False, return_debug: bool = True):
-    adapter_s, mount_s, root_s, rel_s = await resolve_adapter_and_rel(src)
-    adapter_d, mount_d, root_d, rel_d = await resolve_adapter_and_rel(dst)
+    adapter_s, adapter_model_s, root_s, rel_s = await resolve_adapter_and_rel(src)
+    adapter_d, adapter_model_d, root_d, rel_d = await resolve_adapter_and_rel(dst)
     debug_info = {
         "src": src, "dst": dst,
         "rel_s": rel_s, "rel_d": rel_d,
         "root_s": root_s, "root_d": root_d,
         "overwrite": overwrite
     }
-    if mount_s.id != mount_d.id:
-        raise HTTPException(400, detail="Cross-mount rename not supported")
+    if adapter_model_s.id != adapter_model_d.id:
+        raise HTTPException(400, detail="Cross-adapter rename not supported")
     if not rel_s:
         raise HTTPException(400, detail="Cannot rename mount root")
     if not rel_d:
@@ -338,7 +337,7 @@ async def rename_path(src: str, dst: str, overwrite: bool = False, return_debug:
 
 
 async def stream_file(path: str, range_header: str | None):
-    adapter, mount, root, rel = await resolve_adapter_and_rel(path)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
     if not rel or rel.endswith('/'):
         raise HTTPException(400, detail="Path is a directory")
     if is_raw_filename(rel):
@@ -371,7 +370,7 @@ async def stream_file(path: str, range_header: str | None):
         except Exception as e:
             raise HTTPException(500, detail=f"RAW file processing failed: {e}")
 
-    stream_impl = getattr(adapter, "stream_file", None)
+    stream_impl = getattr(adapter_instance, "stream_file", None)
     if callable(stream_impl):
         return await stream_impl(root, rel, range_header)
     data = await read_file(path)
@@ -380,24 +379,24 @@ async def stream_file(path: str, range_header: str | None):
 
 
 async def stat_file(path: str):
-    adapter, _mount, root, rel = await resolve_adapter_and_rel(path)
-    stat_func = getattr(adapter, "stat_file", None)
+    adapter_instance, _, root, rel = await resolve_adapter_and_rel(path)
+    stat_func = getattr(adapter_instance, "stat_file", None)
     if not callable(stat_func):
         raise HTTPException(501, detail="Adapter does not implement stat_file")
     return await stat_func(root, rel)
 
 
 async def copy_path(src: str, dst: str, overwrite: bool = False, return_debug: bool = True):
-    adapter_s, mount_s, root_s, rel_s = await resolve_adapter_and_rel(src)
-    adapter_d, mount_d, root_d, rel_d = await resolve_adapter_and_rel(dst)
+    adapter_s, adapter_model_s, root_s, rel_s = await resolve_adapter_and_rel(src)
+    adapter_d, adapter_model_d, root_d, rel_d = await resolve_adapter_and_rel(dst)
     debug_info = {
         "src": src, "dst": dst,
         "rel_s": rel_s, "rel_d": rel_d,
         "root_s": root_s, "root_d": root_d,
         "overwrite": overwrite
     }
-    if mount_s.id != mount_d.id:
-        raise HTTPException(400, detail="Cross-mount copy not supported")
+    if adapter_model_s.id != adapter_model_d.id:
+        raise HTTPException(400, detail="Cross-adapter copy not supported")
     if not rel_s:
         raise HTTPException(400, detail="Cannot copy mount root")
     if not rel_d:

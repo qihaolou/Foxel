@@ -116,7 +116,7 @@ async def get_thumb(
     if not is_image_filename(rel):
         raise HTTPException(404, detail="Not an image")
     # type: ignore
-    data, mime, key = await get_or_create_thumb(adapter, mount.adapter_id, root, rel, w, h, fit)
+    data, mime, key = await get_or_create_thumb(adapter, mount.id, root, rel, w, h, fit)
     headers = {
         'Cache-Control': 'public, max-age=3600',
         'ETag': key,

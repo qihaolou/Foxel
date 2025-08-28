@@ -1,3 +1,3 @@
-from .database import StorageAdapter, Mount
+from .database import StorageAdapter
 
-__all__ = ["StorageAdapter", "Mount"]
+__all__ = ["StorageAdapter"]

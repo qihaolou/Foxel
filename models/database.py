@@ -8,23 +8,11 @@ class StorageAdapter(Model):
     type = fields.CharField(max_length=30)
     config = fields.JSONField()
     enabled = fields.BooleanField(default=True)
-    mounts: fields.ReverseRelation["Mount"]
+    path = fields.CharField(max_length=255, unique=True)
+    sub_path = fields.CharField(max_length=1024, null=True)
 
     class Meta:
         table = "storage_adapters"
-
-
-class Mount(Model):
-    id = fields.IntField(pk=True)
-    path = fields.CharField(max_length=255, unique=True)
-    sub_path = fields.CharField(max_length=1024, null=True)
-    adapter: fields.ForeignKeyRelation[StorageAdapter] = fields.ForeignKeyField(
-        "models.StorageAdapter", related_name="mounts", on_delete=fields.CASCADE
-    )
-    enabled = fields.BooleanField(default=True)
-
-    class Meta:
-        table = "mounts"
 
 
 class UserAccount(Model):

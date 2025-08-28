@@ -1,4 +1,4 @@
-import { Layout, Menu, theme, Button, Modal, Tag, Tooltip } from 'antd';
+import { Layout, Menu, theme, Button, Modal, Tag, Tooltip, Descriptions, Alert, Divider, Spin } from 'antd';
 import { navGroups } from './nav.ts';
 import type { NavItem, NavGroup } from './nav.ts';
 import { memo, useEffect, useState } from 'react';
@@ -225,13 +225,71 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
         onCancel={() => setIsVersionModalOpen(false)}
         title="版本信息"
         footer={null}
+        width={600}
       >
-        <div>
-          <p>当前版本: {status?.version}</p>
-          {latestVersion && (
-            <div>
-              <p>最新版本: {latestVersion.version}</p>
-              <ReactMarkdown>{latestVersion.body}</ReactMarkdown>
+        <div style={{ paddingTop: 12 }}>
+          {latestVersion ? (
+            <>
+              <Descriptions bordered column={1} size="small">
+                <Descriptions.Item label="当前版本">
+                  <Tag>{status?.version}</Tag>
+                </Descriptions.Item>
+                <Descriptions.Item label="最新版本">
+                  <Tag color={hasUpdate ? 'orange' : 'green'}>{latestVersion.version}</Tag>
+                </Descriptions.Item>
+              </Descriptions>
+
+              {hasUpdate && (
+                <Alert
+                  message={`发现新版本: ${latestVersion.version}`}
+                  description="建议尽快更新到最新版本，以获得新功能和安全修复。"
+                  type="info"
+                  showIcon
+                  style={{ marginTop: 24, marginBottom: 24 }}
+                  action={
+                    <Button
+                      size="small"
+                      type="primary"
+                      href="https://github.com/DrizzleTime/Foxel/releases"
+                      target="_blank"
+                      icon={<GithubOutlined />}
+                    >
+                      前往发布页面
+                    </Button>
+                  }
+                />
+              )}
+
+              <Divider orientation="left" plain>更新日志</Divider>
+              <div style={{
+                maxHeight: '40vh',
+                overflowY: 'auto',
+                padding: '8px 16px',
+                background: token.colorFillAlter,
+                borderRadius: token.borderRadiusLG,
+                border: `1px solid ${token.colorBorderSecondary}`
+              }}>
+                <ReactMarkdown
+                  components={{
+                    h3: ({ ...props }) => <h3 style={{
+                      fontSize: 16,
+                      borderBottom: `1px solid ${token.colorBorderSecondary}`,
+                      paddingBottom: 8,
+                      marginTop: 24,
+                      marginBottom: 16
+                    }} {...props} />,
+                    ul: ({ ...props }) => <ul style={{ paddingLeft: 20 }} {...props} />,
+                    li: ({ ...props }) => <li style={{ marginBottom: 8 }} {...props} />,
+                    p: ({ ...props }) => <p style={{ marginBottom: 8 }} {...props} />,
+                    a: ({ ...props }) => <a {...props} target="_blank" rel="noopener noreferrer" />
+                  }}
+                >{latestVersion.body}</ReactMarkdown>
+              </div>
+            </>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '40px 0', color: token.colorTextSecondary }}>
+              <Spin size="large" />
+              <p style={{ marginTop: 16 }}>正在获取最新版本信息...</p>
             </div>
           )}
         </div>
