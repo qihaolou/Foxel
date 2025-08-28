@@ -26,7 +26,7 @@ const SetupPage = () => {
             root: values.root_dir
           },
           sub_path: null,
-          mount_path: values.mount_path,
+          path: values.path,
           enabled: true
         });
         window.location.href = '/';
@@ -41,7 +41,7 @@ const SetupPage = () => {
 
   const stepFields = [
     ['db_driver', 'vector_db_driver'],
-    ['adapter_name', 'adapter_type', 'mount_path', 'root_dir'],
+    ['adapter_name', 'adapter_type', 'path', 'root_dir'],
     ['username', 'full_name', 'email', 'password', 'confirm'],
   ]
 
@@ -105,7 +105,7 @@ const SetupPage = () => {
           </Form.Item>
           <Form.Item
             label="挂载路径"
-            name="mount_path"
+            name="path"
             initialValue="/local"
             rules={[{ required: true, message: '请输入挂载路径！' }]}
           >

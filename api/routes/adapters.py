@@ -39,7 +39,7 @@ async def create_adapter(
     data: AdapterCreate,
     current_user: Annotated[User, Depends(get_current_active_user)]
 ):
-    norm_path = AdapterCreate.normalize_mount_path(data.mount_path)
+    norm_path = AdapterCreate.normalize_mount_path(data.path)
     exists = await StorageAdapter.get_or_none(path=norm_path)
     if exists:
         raise HTTPException(400, detail="Mount path already exists")
@@ -108,7 +108,7 @@ async def update_adapter(
     if not rec:
         raise HTTPException(404, detail="Not found")
 
-    norm_path = AdapterCreate.normalize_mount_path(data.mount_path)
+    norm_path = AdapterCreate.normalize_mount_path(data.path)
     existing = await StorageAdapter.get_or_none(path=norm_path)
     if existing and existing.id != adapter_id:
         raise HTTPException(400, detail="Mount path already exists")

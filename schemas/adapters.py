@@ -1,5 +1,5 @@
 from typing import Dict, Optional
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class AdapterBase(BaseModel):
@@ -7,12 +7,11 @@ class AdapterBase(BaseModel):
     type: str = Field(pattern=r"^[a-zA-Z0-9_]+$")
     config: Dict = Field(default_factory=dict)
     enabled: bool = True
+    path: str = None
     sub_path: Optional[str] = None
 
 
 class AdapterCreate(AdapterBase):
-    mount_path: str
-
     @staticmethod
     def normalize_mount_path(p: str) -> str:
         p = p.strip()
@@ -21,7 +20,7 @@ class AdapterCreate(AdapterBase):
         p = p.rstrip('/')
         return p or '/'
 
-    @validator("mount_path")
+    @field_validator("path")
     def _v_mount(cls, v: str):
         if not v:
             raise ValueError("mount_path required")
@@ -30,7 +29,8 @@ class AdapterCreate(AdapterBase):
 
 class AdapterOut(AdapterBase):
     id: int
-    mount_path: str = Field(alias='path')
+    path: str = None
+    sub_path: Optional[str] = None
 
     class Config:
         from_attributes = True

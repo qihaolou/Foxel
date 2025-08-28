@@ -1,17 +1,8 @@
 import { memo, useState, useEffect, useCallback } from 'react';
 import { Table, Button, Space, Drawer, Form, Input, Switch, message, Typography, Popconfirm, Select } from 'antd';
 import PageCard from '../components/PageCard';
-import { adaptersApi } from '../api/client';
+import { adaptersApi, type AdapterItem } from '../api/client';
 
-interface AdapterItem {
-  id: number;
-  name: string;
-  type: string;
-  config: any;
-  enabled: boolean;
-  mount_path?: string | null;
-  sub_path?: string | null;
-}
 
 interface AdapterTypeField {
   key: string;
@@ -65,7 +56,7 @@ const AdaptersPage = memo(function AdaptersPage() {
     form.setFieldsValue({
       name: '',
       type: defaultType,
-      mount_path: '/',
+      path: '/',
       sub_path: '',
       enabled: true,
       config: cfgDefaults
@@ -79,7 +70,7 @@ const AdaptersPage = memo(function AdaptersPage() {
     form.setFieldsValue({
       name: rec.name,
       type: rec.type,
-      mount_path: rec.mount_path || '/',
+      path: rec.path || '/',
       sub_path: rec.sub_path || '',
       enabled: rec.enabled,
       config: rec.config || {}
@@ -105,7 +96,7 @@ const AdaptersPage = memo(function AdaptersPage() {
       const body = {
         name: values.name.trim(),
         type: values.type,
-        mount_path: values.mount_path || '/',
+        path: values.path || '/',
         sub_path: values.sub_path?.trim() || null,
         enabled: values.enabled,
         config: cfg
@@ -155,7 +146,7 @@ const AdaptersPage = memo(function AdaptersPage() {
   const columns = [
     { title: '名称', dataIndex: 'name' },
     { title: '类型', dataIndex: 'type', width: 100 },
-    { title: '挂载路径', dataIndex: 'mount_path', width: 140, render: (v: string) => v || '-' },
+    { title: '挂载路径', dataIndex: 'path', width: 140, render: (v: string) => v || '-' },
     { title: '子路径', dataIndex: 'sub_path', width: 140, render: (v: string) => v || '-' },
     {
       title: '启用',
@@ -251,7 +242,6 @@ const AdaptersPage = memo(function AdaptersPage() {
               placeholder="选择适配器类型"
               options={availableTypes.map(t => ({ value: t.type, label: `${t.name} (${t.type})` }))}
               onChange={() => {
-                // 切换类型时刷新默认 config
                 const t = availableTypes.find(v => v.type === form.getFieldValue('type'));
                 const cfgDefaults: Record<string, any> = {};
                 t?.config_schema.forEach(f => {
@@ -261,7 +251,7 @@ const AdaptersPage = memo(function AdaptersPage() {
               }}
             />
           </Form.Item>
-          <Form.Item name="mount_path" label="挂载路径" rules={[{ required: true, message: '请输入挂载路径' }]}>
+          <Form.Item name="path" label="挂载路径" rules={[{ required: true, message: '请输入挂载路径' }]}>
             <Input placeholder="/或/drive" />
           </Form.Item>
           <Form.Item name="sub_path" label="子路径(可选)">

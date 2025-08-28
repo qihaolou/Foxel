@@ -6,7 +6,7 @@ export interface AdapterItem {
   type: string;
   config: any;
   enabled: boolean;
-  mount_path?: string | null;
+  path?: string | null;
   sub_path?: string | null;
 }
 
