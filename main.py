@@ -1,21 +1,22 @@
+from services.config import VERSION, ConfigCenter
+from services.adapters.registry import runtime_registry
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+from db.session import close_db, init_db
+from api.routers import include_routers
+from fastapi import FastAPI
+from services.middleware.logging_middleware import LoggingMiddleware
+from services.middleware.exception_handler import global_exception_handler
 from dotenv import load_dotenv
 
 load_dotenv()
 
-from services.middleware.exception_handler import global_exception_handler
-from services.middleware.logging_middleware import LoggingMiddleware
-from fastapi import FastAPI
-from api.routers import include_routers
-from db.session import close_db, init_db
-from contextlib import asynccontextmanager
-from fastapi.middleware.cors import CORSMiddleware
-from services.adapters.registry import runtime_registry
-from services.config import VERSION
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
     await runtime_registry.refresh()
+    await ConfigCenter.set("APP_VERSION", VERSION)
     try:
         yield
     finally:
