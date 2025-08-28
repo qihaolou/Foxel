@@ -32,7 +32,7 @@ jobs:
             VERSION=${GITHUB_REF#refs/tags/}
             echo "DOCKER_TAGS=ghcr.io/${REPO_LC}:${VERSION},ghcr.io/${REPO_LC}:latest" >> $GITHUB_ENV
           else
-            echo "DOCKER_TAGS=ghcr.io/${REPO_LC}:latest" >> $GITHUB_ENV
+            echo "DOCKER_TAGS=ghcr.io/${REPO_LC}:dev" >> $GITHUB_ENV
           fi
 
       - name: Log in to GitHub Container Registry
