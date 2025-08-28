@@ -3,7 +3,7 @@ import type { RouteObject } from 'react-router';
 import LayoutShell from './LayoutShell.tsx';
 import LoginPage from '../pages/LoginPage.tsx';
 import SetupPage from '../pages/SetupPage.tsx';
-import PublicSharePage from '../pages/PublicSharePage.tsx';
+import PublicSharePage from '../pages/PublicSharePage';
 import { useAuth } from '../contexts/AuthContext';
 import type { JSX } from 'react';
 

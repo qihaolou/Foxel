@@ -1,0 +1,109 @@
+import { memo, useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router';
+import { Card, message, Spin, Button, Empty, Input, Form } from 'antd';
+import { shareApi, type ShareInfo } from '../../api/share';
+import { type VfsEntry } from '../../api/vfs';
+import { DirectoryViewer } from './DirectoryViewer';
+import { FileViewer } from './FileViewer';
+
+const PublicSharePage = memo(function PublicSharePage() {
+  const { token } = useParams<{ token: string }>();
+  const [loading, setLoading] = useState(true);
+  const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null);
+  const [entry, setEntry] = useState<VfsEntry | null>(null);
+  const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
+  const [verified, setVerified] = useState(false);
+
+  const loadData = useCallback(async (pwd?: string) => {
+    if (!token) return;
+    setLoading(true);
+    setError('');
+    try {
+      let info = shareInfo;
+      if (!info) {
+        info = await shareApi.get(token);
+        setShareInfo(info);
+      }
+
+      if (info?.access_type === 'password' && !verified) {
+        setLoading(false);
+        return;
+      }
+
+      const currentPassword = pwd || password;
+
+      if (info.paths.length === 1) {
+        const listing = await shareApi.listDir(token, '/', currentPassword);
+        if (listing.entries.length === 1) {
+          const singleEntry = listing.entries[0];
+          setEntry(singleEntry);
+        }
+      }
+
+    } catch (e: any) {
+      setError(e.message || '加载分享失败');
+      if (e.message === '需要密码') {
+        setVerified(false);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [token, shareInfo, password, verified]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const handlePasswordSubmit = async (values: { password_input: string }) => {
+    if (!token) return;
+    try {
+      await shareApi.verifyPassword(token, values.password_input);
+      setPassword(values.password_input);
+      setVerified(true);
+      setError('');
+      loadData(values.password_input);
+    } catch (e: any) {
+      message.error(e.message || '密码错误');
+    }
+  };
+
+  if (loading && !shareInfo) {
+    return <div style={{ textAlign: 'center', padding: 50 }}><Spin size="large" /></div>;
+  }
+
+  if (error && !error.includes('需要密码')) {
+    return <div style={{ textAlign: 'center', padding: 50 }}><Empty description={error} /></div>;
+  }
+
+  if (shareInfo?.access_type === 'password' && !verified) {
+    return (
+      <div style={{ padding: '24px', maxWidth: 400, margin: '100px auto' }}>
+        <Card title="需要密码">
+          <Form onFinish={handlePasswordSubmit}>
+            <Form.Item name="password_input" rules={[{ required: true, message: '请输入密码' }]}>
+              <Input.Password placeholder="请输入密码" />
+            </Form.Item>
+            <Form.Item>
+              <Button type="primary" htmlType="submit" block>
+                确认
+              </Button>
+            </Form.Item>
+          </Form>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!shareInfo) {
+    return <div style={{ textAlign: 'center', padding: 50 }}><Empty description="无法加载分享信息" /></div>;
+  }
+
+  if (entry && !entry.is_dir) {
+    return <FileViewer token={token!} shareInfo={shareInfo} entry={entry} password={password} />;
+  } else {
+    return <DirectoryViewer token={token!} shareInfo={shareInfo} password={password} />;
+  }
+});
+
+export default PublicSharePage;
