@@ -109,7 +109,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
 
       <div style={{ flex: 1, overflow: 'auto', paddingBottom: pagination.total > 0 ? '80px' : '0' }} onContextMenu={openBlankContextMenu}>
         {loading && entries.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: 40 }}><EmptyState isRoot={path === '/'} onCreateDir={() => setCreatingDir(true)} onGoUp={goUp} /></div>
+          <div style={{ textAlign: 'center', padding: 40 }}><EmptyState isRoot={path === '/'} /></div>
         ) : viewMode === 'grid' ? (
           <GridView
             entries={entries}
