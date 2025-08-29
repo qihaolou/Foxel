@@ -121,8 +121,6 @@ const FileExplorerPage = memo(function FileExplorerPage() {
             onSelectRange={handleSelectRange}
             onOpen={handleOpenEntry}
             onContextMenu={openContextMenu}
-            onCreateDir={() => setCreatingDir(true)}
-            onGoUp={goUp}
           />
         ) : (
           <FileListView
