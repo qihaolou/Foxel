@@ -154,8 +154,8 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
           }} onClick={showVersionModal}>
             {hasUpdate ? (
               <Tooltip title={`发现新版本: ${latestVersion?.version}`} placement={collapsed ? 'right' : 'top'}>
-                <a href="https://github.com/DrizzleTime/Foxel/releases" target="_blank" rel="noopener noreferrer"
-                   style={{ textDecoration: 'none' }}>
+                <a rel="noopener noreferrer"
+                  style={{ textDecoration: 'none' }}>
                   {collapsed ? (
                     <Tag icon={<WarningOutlined />} color="warning" style={{ marginInlineEnd: 0 }} />
                   ) : (
@@ -200,7 +200,7 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
               target="_blank"
             />
           </div>
-          
+
         </div>
       </Sider>
       <Modal
@@ -241,11 +241,11 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
 
               {hasUpdate && (
                 <Alert
-                  message={`发现新版本: ${latestVersion.version}`}
-                  description="建议尽快更新到最新版本，以获得新功能和安全修复。"
+                  message={<span style={{ color: token.colorText }}>{`发现新版本: ${latestVersion.version}`}</span>}
+                  description={<span style={{ color: token.colorTextSecondary }}>建议尽快更新到最新版本，以获得新功能和安全修复。</span>}
                   type="info"
                   showIcon
-                  style={{ marginTop: 24, marginBottom: 24 }}
+                  style={{ marginTop: 24, marginBottom: 24, background: token.colorInfoBg, borderColor: token.colorInfoBorder }}
                   action={
                     <Button
                       size="small"
@@ -276,7 +276,8 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
                       borderBottom: `1px solid ${token.colorBorderSecondary}`,
                       paddingBottom: 8,
                       marginTop: 24,
-                      marginBottom: 16
+                      marginBottom: 16,
+                      color: token.colorTextHeading
                     }} {...props} />,
                     ul: ({ ...props }) => <ul style={{ paddingLeft: 20 }} {...props} />,
                     li: ({ ...props }) => <li style={{ marginBottom: 8 }} {...props} />,

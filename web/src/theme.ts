@@ -4,6 +4,7 @@ import type { ThemeConfig } from 'antd/es/config-provider/context';
 export const foxelTheme: ThemeConfig = {
   algorithm: [theme.defaultAlgorithm, theme.compactAlgorithm],
   token: {
+    colorInfoBg: '#efefef',
     colorPrimary: '#111',
     colorInfo: '#111',
     colorText: '#111',
@@ -37,7 +38,7 @@ export const foxelTheme: ThemeConfig = {
     },
     Card: {
       borderRadiusLG: 16,
-     padding: 16
+      padding: 16
     },
     Input: { borderRadius: 8 },
     Dropdown: { controlItemBgHover: '#f2f2f2' },
