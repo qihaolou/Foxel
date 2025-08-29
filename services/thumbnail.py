@@ -5,7 +5,8 @@ from pathlib import Path
 from typing import Tuple
 from fastapi import HTTPException
 
-ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif", "bmp", "tiff", "arw", "cr2", "cr3", "nef", "rw2", "orf", "pef", "dng"}
+ALLOWED_EXT = {"jpg", "jpeg", "png", "webp", "gif", "bmp",
+               "tiff", "arw", "cr2", "cr3", "nef", "rw2", "orf", "pef", "dng"}
 RAW_EXT = {"arw", "cr2", "cr3", "nef", "rw2", "orf", "pef", "dng"}
 MAX_SOURCE_SIZE = 200 * 1024 * 1024
 CACHE_ROOT = Path('data/.thumb_cache')
@@ -49,11 +50,12 @@ def generate_thumb(data: bytes, w: int, h: int, fit: str, is_raw: bool = False) 
                     thumb = raw.extract_thumb()
                 except rawpy.LibRawNoThumbnailError:
                     thumb = None
-                
+
                 if thumb is not None and thumb.format in [rawpy.ThumbFormat.JPEG, rawpy.ThumbFormat.BITMAP]:
                     im = Image.open(io.BytesIO(thumb.data))
                 else:
-                    rgb = raw.postprocess(use_camera_wb=False, use_auto_wb=True, output_bps=8)
+                    rgb = raw.postprocess(
+                        use_camera_wb=False, use_auto_wb=True, output_bps=8)
                     im = Image.fromarray(rgb)
         except Exception as e:
             print(f"rawpy processing failed: {e}")
@@ -87,18 +89,48 @@ def generate_thumb(data: bytes, w: int, h: int, fit: str, is_raw: bool = False) 
 async def get_or_create_thumb(adapter, adapter_id: int, root: str, rel: str, w: int, h: int, fit: str = 'cover'):
     stat = await adapter.stat_file(root, rel)
     if stat['size'] > MAX_SOURCE_SIZE:
-         raise HTTPException(400, detail="Image too large for thumbnail")
-    
-    key = _cache_key(adapter_id, rel, stat['size'], int(stat['mtime']), w, h, fit)
+        raise HTTPException(400, detail="Image too large for thumbnail")
+
+    key = _cache_key(adapter_id, rel, stat['size'], int(
+        stat['mtime']), w, h, fit)
     path = _cache_path(key)
     if path.exists():
         return path.read_bytes(), 'image/webp', key
+
     _ensure_cache_dir(path)
-    read_data = await adapter.read_file(root, rel)
-    try:
-        thumb_bytes, mime = generate_thumb(read_data, w, h, fit, is_raw=is_raw_filename(rel))
-    except Exception as e:
-        print(e)
-        raise HTTPException(500, detail=f"Thumbnail generation failed: {e}")
-    path.write_bytes(thumb_bytes)
-    return thumb_bytes, mime, key
+    thumb_bytes, mime = None, None
+
+    get_thumb_impl = getattr(adapter, "get_thumbnail", None)
+    if callable(get_thumb_impl):
+        size_str = "large" if w > 400 else "medium" if w > 100 else "small"
+        native_thumb_bytes = await get_thumb_impl(root, rel, size_str)
+
+        if native_thumb_bytes:
+            try:
+                from PIL import Image
+                im = Image.open(io.BytesIO(native_thumb_bytes))
+                buf = io.BytesIO()
+                im.save(buf, 'WEBP', quality=85)
+                thumb_bytes = buf.getvalue()
+                mime = 'image/webp'
+            except Exception as e:
+                print(
+                    f"Failed to convert native thumbnail to WebP: {e}, falling back.")
+                thumb_bytes, mime = None, None
+
+    if not thumb_bytes:
+        read_data = await adapter.read_file(root, rel)
+        try:
+            thumb_bytes, mime = generate_thumb(
+                read_data, w, h, fit, is_raw=is_raw_filename(rel))
+        except Exception as e:
+            print(e)
+            raise HTTPException(
+                500, detail=f"Thumbnail generation failed: {e}")
+
+    if thumb_bytes:
+        path.write_bytes(thumb_bytes)
+        return thumb_bytes, mime, key
+
+    raise HTTPException(
+        500, detail="Failed to generate thumbnail by any means")
