@@ -5,6 +5,7 @@ import { memo, useEffect, useState } from 'react';
 import { useSystemStatus } from '../contexts/SystemContext.tsx';
 import {
   CheckCircleOutlined,
+  FileTextOutlined,
   GithubOutlined,
   MenuFoldOutlined,
   SendOutlined,
@@ -197,6 +198,12 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
               shape="circle"
               icon={<SendOutlined />}
               href="https://t.me/+thDsBfyqJxZkNTU1"
+              target="_blank"
+            />
+            <Button
+              shape="circle"
+              icon={<FileTextOutlined />}
+              href="https://foxel.cc"
               target="_blank"
             />
           </div>
