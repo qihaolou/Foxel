@@ -42,7 +42,12 @@ async def resolve_adapter_and_rel(path: str):
         raise e
     adapter_instance = runtime_registry.get(adapter_model.id)
     if not adapter_instance:
-        raise HTTPException(404, detail=f"Adapter instance not found for ID {adapter_model.id}")
+        await runtime_registry.refresh()
+        adapter_instance = runtime_registry.get(adapter_model.id)
+        if not adapter_instance:
+            raise HTTPException(
+                404, detail=f"Adapter instance for ID {adapter_model.id} not found or failed to load."
+            )
     effective_root = adapter_instance.get_effective_root(adapter_model.sub_path)
     return adapter_instance, adapter_model, effective_root, rel
 
@@ -72,7 +77,16 @@ async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) ->
     try:
         adapter_model, rel = await resolve_adapter_by_path(norm)
         adapter_instance = runtime_registry.get(adapter_model.id)
-        effective_root = adapter_instance.get_effective_root(adapter_model.sub_path)
+        if not adapter_instance:
+            await runtime_registry.refresh()
+            adapter_instance = runtime_registry.get(adapter_model.id)
+        
+        if adapter_instance:
+            effective_root = adapter_instance.get_effective_root(adapter_model.sub_path)
+        else:
+            adapter_model = None
+            effective_root = ""
+            rel = ""
     except HTTPException:
         adapter_model = None
         adapter_instance = None
