@@ -70,7 +70,6 @@ class TelegramAdapter:
             await client.connect()
             messages = await client.get_messages(self.chat_id, limit=50)
             for message in messages:
-                print(message)
                 if message and (message.document or message.video):
                     media = message.document or message.video
                     filename = None
