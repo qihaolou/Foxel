@@ -8,6 +8,7 @@ from fastapi import FastAPI
 from services.middleware.logging_middleware import LoggingMiddleware
 from services.middleware.exception_handler import global_exception_handler
 from dotenv import load_dotenv
+from services.task_queue import task_queue_service
 
 load_dotenv()
 
@@ -17,9 +18,11 @@ async def lifespan(app: FastAPI):
     await init_db()
     await runtime_registry.refresh()
     await ConfigCenter.set("APP_VERSION", VERSION)
+    task_queue_service.start_worker()
     try:
         yield
     finally:
+        await task_queue_service.stop_worker()
         await close_db()
 
 

@@ -6,6 +6,7 @@ from schemas.tasks import AutomationTaskCreate, AutomationTaskUpdate
 from api.response import success
 from services.auth import get_current_active_user, User
 from services.logging import LogService
+from services.task_queue import task_queue_service
 
 router = APIRouter(
     prefix="/api/tasks",
@@ -13,6 +14,25 @@ router = APIRouter(
     dependencies=[Depends(get_current_active_user)],
     responses={404: {"description": "Not found"}},
 )
+
+
+@router.get("/queue")
+async def get_task_queue_status(
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    tasks = task_queue_service.get_all_tasks()
+    return success([task.dict() for task in tasks])
+
+
+@router.get("/queue/{task_id}")
+async def get_task_status(
+    task_id: str,
+    current_user: Annotated[User, Depends(get_current_active_user)],
+):
+    task = task_queue_service.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    return success(task.dict())
 
 
 @router.post("/")

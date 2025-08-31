@@ -4,6 +4,9 @@ from models.database import AutomationTask
 from services.processors.registry import get as get_processor
 from services.logging import LogService
 
+from services.task_queue import task_queue_service
+
+
 class TaskService:
     async def trigger_tasks(self, event: str, path: str):
         tasks = await AutomationTask.filter(event=event, enabled=True)
@@ -21,28 +24,12 @@ class TaskService:
         return True
 
     async def execute(self, task: AutomationTask, path: str):
-        from services.virtual_fs import read_file, write_file
-
-        processor = get_processor(task.processor_type)
-        if not processor:
-            print(f"Processor {task.processor_type} not found for task {task.id}")
-            return
-
-        try:
-            file_content = await read_file(path)
-            result = await processor.process(file_content, path, task.processor_config)
-            
-            save_to = task.processor_config.get("save_to")
-            if save_to and getattr(processor, "produces_file", False):
-                await write_file(save_to, result)
-
-        except Exception as e:
-            error_message = f"Error executing task {task.id} for path {path}: {e}"
-            print(error_message)
-            await LogService.error(
-                source=f"task_executor:{task.id}",
-                message=error_message,
-                details={"task_name": task.name, "event": task.event, "path": path, "processor": task.processor_type}
-            )
+        await task_queue_service.add_task(
+            "automation_task",
+            {
+                "task_id": task.id,
+                "path": path,
+            },
+        )
 
 task_service = TaskService()

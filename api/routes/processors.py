@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Body
 from typing import Annotated
 from services.processors.registry import get_config_schemas
-from services.virtual_fs import process_file
+from services.task_queue import task_queue_service
 from services.auth import get_current_active_user, User
 from api.response import success
 from pydantic import BaseModel
@@ -21,7 +21,7 @@ async def list_processors(
             "name": meta["name"],
             "supported_exts": meta.get("supported_exts", []),
             "config_schema": meta["config_schema"],
-            "produces_file": meta.get("produces_file", False), 
+            "produces_file": meta.get("produces_file", False),
         })
     return success(out)
 
@@ -40,5 +40,13 @@ async def process_file_with_processor(
     req: ProcessRequest = Body(...)
 ):
     save_to = req.path if req.overwrite else req.save_to
-    result = await process_file(req.path, req.processor_type, req.config, save_to)
-    return success(result)
+    task = await task_queue_service.add_task(
+        "process_file",
+        {
+            "path": req.path,
+            "processor_type": req.processor_type,
+            "config": req.config,
+            "save_to": save_to,
+        },
+    )
+    return success({"task_id": task.id})
