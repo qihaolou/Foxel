@@ -8,7 +8,10 @@
 
 **A highly extensible private cloud storage solution for individuals and teams, featuring AI-powered semantic search.**
 
-![Python Version](https://img.shields.io/badge/Python-3.13+-blue.svg)![React](https://img.shields.io/badge/React-19.0-blue.svg)![License](https://img.shields.io/badge/license-MIT-green.svg)![GitHub stars](https://img.shields.io/github/stars/DrizzleTime/foxel?style=social)
+![Python Version](https://img.shields.io/badge/Python-3.13+-blue.svg)
+![React](https://img.shields.io/badge/React-19.0-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+![GitHub stars](https://img.shields.io/github/stars/DrizzleTime/foxel?style=social)
 
 ---
   <blockquote>
