@@ -19,6 +19,7 @@ from services.virtual_fs import (
 from services.thumbnail import is_image_filename, get_or_create_thumb, is_raw_filename
 from schemas import MkdirRequest, MoveRequest
 from api.response import success
+from services.config import ConfigCenter
 
 router = APIRouter(prefix='/api/fs', tags=["virtual-fs"])
 
@@ -151,7 +152,13 @@ async def get_temp_link(
     """获取文件的临时公开访问令牌"""
     full_path = '/' + full_path if not full_path.startswith('/') else full_path
     token = await generate_temp_link_token(full_path, expires_in=expires_in)
-    return success({"token": token, "path": full_path})
+    file_domain = await ConfigCenter.get("FILE_DOMAIN")
+    if file_domain:
+        file_domain = file_domain.rstrip('/')
+        url = f"{file_domain}/api/fs/public/{token}"
+    else:
+        url = f"/api/fs/public/{token}"
+    return success({"token": token, "path": full_path, "url": url})
 
 
 @router.get("/public/{token}")

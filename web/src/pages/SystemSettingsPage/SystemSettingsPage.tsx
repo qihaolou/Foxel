@@ -2,13 +2,13 @@ import { Form, Input, Button, message, Tabs, Space, Card } from 'antd';
 import { useEffect, useState } from 'react';
 import PageCard from '../../components/PageCard';
 import { getAllConfig, setConfig } from '../../api/config';
-import { API_BASE_URL } from '../../api/client';
 import { AppstoreOutlined, RobotOutlined } from '@ant-design/icons';
 
-const APP_CONFIG_KEYS = [
+const APP_CONFIG_KEYS: {key: string, label: string, default?: string}[] = [
   { key: 'APP_NAME', label: '应用名称' },
   { key: 'APP_LOGO', label: 'LOGO地址' },
-  { key: 'SERVER_URL', label: '服务端URL', default: API_BASE_URL },
+  { key: 'APP_DOMAIN', label: '应用域名' },
+  { key: 'FILE_DOMAIN', label: '文件域名' },
 ];
 
 const VISION_CONFIG_KEYS = [

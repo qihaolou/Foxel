@@ -41,7 +41,9 @@ async def get_system_status():
         "version": VERSION,
         "title": await ConfigCenter.get("APP_NAME", "Foxel"),
         "logo": await ConfigCenter.get("APP_LOGO", "/logo.svg"),
-        "is_initialized": await has_users()
+        "is_initialized": await has_users(),
+        "app_domain": await ConfigCenter.get("APP_DOMAIN"),
+        "file_domain": await ConfigCenter.get("FILE_DOMAIN"),
     }
     return success(system_info)
 

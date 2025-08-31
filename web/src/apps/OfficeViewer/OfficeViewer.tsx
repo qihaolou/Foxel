@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { vfsApi } from '../../api/client';
 import type { AppComponentProps } from '../types';
 import { Spin, Result, Button } from 'antd';
+import { useSystemStatus } from '../../contexts/SystemContext';
 
 export const OfficeViewerApp: React.FC<AppComponentProps> = ({ filePath, onRequestClose }) => {
+  const systemStatus = useSystemStatus();
   const [url, setUrl] = useState<string>();
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>();
@@ -17,8 +19,8 @@ export const OfficeViewerApp: React.FC<AppComponentProps> = ({ filePath, onReque
     vfsApi.getTempLinkToken(filePath.replace(/^\/+/, ''))
       .then(res => {
         if (cancelled) return;
-        // 注意：vfsApi.getTempPublicUrl 返回的是相对路径，我们需要构建完整的 URL
-        const fullUrl = new URL(vfsApi.getTempPublicUrl(res.token), window.location.origin).href;
+        const baseUrl = systemStatus?.file_domain || window.location.origin;
+        const fullUrl = new URL(res.url, baseUrl).href;
         const officeUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fullUrl)}`;
         setUrl(officeUrl);
       })

@@ -29,8 +29,7 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
     try {
       const fullPath = (path === '/' ? '' : path) + '/' + entry.name;
       const res = await vfsApi.getTempLinkToken(fullPath, expiresIn);
-      const tempLink = `${window.location.origin}/api/fs/public/${res.token}`;
-      setLink(tempLink);
+      setLink(res.url);
     } catch (e: any) {
       message.error(e.message || '生成链接失败');
     } finally {

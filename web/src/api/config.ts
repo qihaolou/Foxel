@@ -20,6 +20,8 @@ export interface SystemStatus {
   title: string;
   logo: string;
   is_initialized: boolean;
+  app_domain?: string;
+  file_domain?: string;
 }
 
 export async function status() {

@@ -51,7 +51,7 @@ export const vfsApi = {
   streamUrl: (path: string) => `${API_BASE_URL}/fs/stream/${encodeURI(path.replace(/^\/+/, ''))}`,
   stat: (path: string) => request(`/fs/stat/${encodeURI(path.replace(/^\/+/, ''))}`),
   getTempLinkToken: (path: string, expiresIn: number = 3600) =>
-    request<{token: string}>(`/fs/temp-link/${encodeURI(path.replace(/^\/+/, ''))}?expires_in=${expiresIn}`),
+    request<{token: string, path: string, url: string}>(`/fs/temp-link/${encodeURI(path.replace(/^\/+/, ''))}?expires_in=${expiresIn}`),
   getTempPublicUrl: (token: string) => `${API_BASE_URL}/fs/public/${token}`,
   uploadStream: (fullPath: string, file: File, overwrite: boolean = true, onProgress?: (loaded: number, total: number) => void) => {
     const enc = encodeURI(fullPath.replace(/^\/+/, ''));

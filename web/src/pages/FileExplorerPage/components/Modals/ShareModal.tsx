@@ -3,6 +3,7 @@ import { Modal, Form, Input, Radio, InputNumber, message, Button, Typography } f
 import { CopyOutlined } from '@ant-design/icons';
 import type { VfsEntry, ShareInfoWithPassword } from '../../../../api/client';
 import { shareApi } from '../../../../api/share';
+import { useSystemStatus } from '../../../../contexts/SystemContext';
 
 interface ShareModalProps {
   entries: VfsEntry[];
@@ -13,6 +14,7 @@ interface ShareModalProps {
 }
 
 export const ShareModal = memo(function ShareModal({ entries, path, open, onOk, onCancel }: ShareModalProps) {
+  const systemStatus = useSystemStatus();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [accessType, setAccessType] = useState('public');
@@ -66,7 +68,8 @@ export const ShareModal = memo(function ShareModal({ entries, path, open, onOk, 
     message.success('已复制到剪贴板');
   };
 
-  const shareUrl = createdShare ? `${window.location.origin}/share/${createdShare.token}` : '';
+  const baseUrl = systemStatus?.app_domain || window.location.origin;
+  const shareUrl = createdShare ? new URL(`/share/${createdShare.token}`, baseUrl).href : '';
 
   const renderForm = () => (
     <Form form={form} layout="vertical" initialValues={{ name: defaultName, accessType: 'public', expiresInDays: 7 }}>

@@ -4,8 +4,10 @@ import PageCard from '../components/PageCard';
 import { shareApi, type ShareInfo } from '../api/share';
 import { format, parseISO } from 'date-fns';
 import { LinkOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
+import { useSystemStatus } from '../contexts/SystemContext';
 
 const SharePage = memo(function SharePage() {
+  const systemStatus = useSystemStatus();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ShareInfo[]>([]);
 
@@ -24,7 +26,8 @@ const SharePage = memo(function SharePage() {
   useEffect(() => { fetchList(); }, [fetchList]);
 
   const doCopy = (rec: ShareInfo) => {
-    const shareUrl = `${window.location.origin}/share/${rec.token}`;
+    const baseUrl = systemStatus?.app_domain || window.location.origin;
+    const shareUrl = new URL(`/share/${rec.token}`, baseUrl).href;
     navigator.clipboard.writeText(shareUrl);
     message.success('链接已复制');
   };
