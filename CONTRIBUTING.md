@@ -82,7 +82,24 @@
     pip install -r requirements.txt
     ```
 
-4. **启动开发服务器**
+4. **初始化环境**
+
+    在启动服务前，请进行以下准备：
+
+    - **创建数据目录**:
+      在项目根目录执行 `mkdir -p data/db`。这将创建用于存放数据库等文件的目录。
+      > [!IMPORTANT]
+      > 请确保应用拥有对 `data/db` 目录的读写权限。
+
+    - **创建 `.env` 配置文件**:
+      在项目根目录创建名为 `.env` 的文件，并填入以下内容。这些密钥用于保障应用安全，您可以按需修改。
+
+      ```dotenv
+      SECRET_KEY=EnsRhL9NFPxgFVc+7t96/y70DIOR+9SpntcIqQa90TU=
+      TEMP_LINK_SECRET_KEY=EnsRhL9NFPxgFVc+7t96/y70DIOR+9SpntcIqQa90TU=
+      ```
+
+5. **启动开发服务器**
 
     ```bash
     uvicorn main:app --reload --host 0.0.0.0 --port 8000
