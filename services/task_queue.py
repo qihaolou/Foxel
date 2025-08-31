@@ -102,10 +102,10 @@ class TaskQueueService:
             finally:
                 self._queue.task_done()
 
-    def start_worker(self):
+    async def start_worker(self):
         if self._worker_task is None or self._worker_task.done():
             self._worker_task = asyncio.create_task(self.worker())
-            LogService.info("task_queue", "Task worker created.")
+            await LogService.info("task_queue", "Task worker created.")
 
     async def stop_worker(self):
         if self._worker_task and not self._worker_task.done():

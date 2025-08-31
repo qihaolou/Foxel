@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     await runtime_registry.refresh()
     await ConfigCenter.set("APP_VERSION", VERSION)
-    task_queue_service.start_worker()
+    await task_queue_service.start_worker()
     try:
         yield
     finally:

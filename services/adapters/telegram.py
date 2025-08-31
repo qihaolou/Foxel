@@ -1,5 +1,7 @@
 from __future__ import annotations
 from typing import List, Dict, Tuple, AsyncIterator
+import io
+import os
 from models import StorageAdapter
 from telethon import TelegramClient
 from telethon.sessions import StringSession
@@ -20,7 +22,7 @@ CONFIG_SCHEMA = [
 ]
 
 class TelegramAdapter:
-    """Telegram 存储适配器 (只读, 使用用户 Session)"""
+    """Telegram 存储适配器 (使用用户 Session)"""
 
     def __init__(self, record: StorageAdapter):
         self.record = record
@@ -70,30 +72,43 @@ class TelegramAdapter:
             await client.connect()
             messages = await client.get_messages(self.chat_id, limit=50)
             for message in messages:
-                if message and (message.document or message.video):
-                    media = message.document or message.video
-                    filename = None
+                if not message:
+                    continue
+                
+                media = message.document or message.video or message.photo
+                if not media:
+                    continue
+
+                filename = None
+                size = 0
+                
+                if message.photo:
+                    photo_size = message.photo.sizes[-1]
+                    size = photo_size.size if hasattr(photo_size, 'size') else 0
+                    filename = f"photo_{message.id}.jpg"
+
+                elif message.document or message.video:
+                    size = media.size
                     if hasattr(media, 'attributes'):
                         for attr in media.attributes:
                             if hasattr(attr, 'file_name') and attr.file_name:
                                 filename = attr.file_name
                                 break
-                    
-                    if not filename:
-                        if message.text and '.' in message.text:
-                             if len(message.text) < 256 and '\n' not in message.text:
-                                  filename = message.text
+                
+                if not filename:
+                    if message.text and '.' in message.text and len(message.text) < 256 and '\n' not in message.text:
+                        filename = message.text
+                
+                if not filename:
+                    filename = f"unknown_{message.id}"
 
-                    if not filename:
-                        filename = "Unknown"
-                    
-                    entries.append({
-                        "name": f"{message.id}_{filename}",
-                        "is_dir": False,
-                        "size": media.size,
-                        "mtime": int(message.date.timestamp()),
-                        "type": "file",
-                    })
+                entries.append({
+                    "name": f"{message.id}_{filename}",
+                    "is_dir": False,
+                    "size": size,
+                    "mtime": int(message.date.timestamp()),
+                    "type": "file",
+                })
         finally:
             if client.is_connected():
                 await client.disconnect()
@@ -111,7 +126,7 @@ class TelegramAdapter:
         try:
             await client.connect()
             message = await client.get_messages(self.chat_id, ids=message_id)
-            if not message or not (message.document or message.video):
+            if not message or not (message.document or message.video or message.photo):
                 raise FileNotFoundError(f"在频道 {self.chat_id} 中未找到消息ID为 {message_id} 的文件")
             
             file_bytes = await client.download_media(message, file=bytes)
@@ -121,25 +136,73 @@ class TelegramAdapter:
                 await client.disconnect()
 
     async def write_file(self, root: str, rel: str, data: bytes):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持写入文件。")
+        """将字节数据作为文件上传"""
+        client = self._get_client()
+        file_like = io.BytesIO(data)
+        file_like.name = os.path.basename(rel) or "file"
+
+        try:
+            await client.connect()
+            await client.send_file(self.chat_id, file_like, caption=file_like.name)
+        finally:
+            if client.is_connected():
+                await client.disconnect()
 
     async def write_file_stream(self, root: str, rel: str, data_iter: AsyncIterator[bytes]):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持流式写入文件。")
+        """以流式方式上传文件"""
+        client = self._get_client()
+        filename = os.path.basename(rel) or "file"
+        import tempfile
+        temp_dir = tempfile.gettempdir()
+        temp_path = os.path.join(temp_dir, filename)
+        
+        total_size = 0
+        try:
+            with open(temp_path, "wb") as f:
+                async for chunk in data_iter:
+                    if chunk:
+                        f.write(chunk)
+                        total_size += len(chunk)
+            
+            await client.connect()
+            await client.send_file(self.chat_id, temp_path, caption=filename)
+
+        finally:
+            if os.path.exists(temp_path):
+                os.remove(temp_path)
+            if client.is_connected():
+                await client.disconnect()
+        return total_size
 
     async def mkdir(self, root: str, rel: str):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持创建目录。")
+        raise NotImplementedError("Telegram 适配器不支持创建目录。")
 
     async def delete(self, root: str, rel: str):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持删除。")
+        """删除一个文件 (即一条消息)"""
+        try:
+            message_id_str, _ = rel.split('_', 1)
+            message_id = int(message_id_str)
+        except (ValueError, IndexError):
+            raise FileNotFoundError(f"无效的文件路径格式，无法解析消息ID: {rel}")
+
+        client = self._get_client()
+        try:
+            await client.connect()
+            result = await client.delete_messages(self.chat_id, [message_id])
+            if not result or not result[0].pts:
+                 raise FileNotFoundError(f"在 {self.chat_id} 中删除消息 {message_id} 失败，可能消息不存在或无权限")
+        finally:
+            if client.is_connected():
+                await client.disconnect()
 
     async def move(self, root: str, src_rel: str, dst_rel: str):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持移动。")
+        raise NotImplementedError("Telegram 适配器不支持移动。")
 
     async def rename(self, root: str, src_rel: str, dst_rel: str):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持重命名。")
+        raise NotImplementedError("Telegram 适配器不支持重命名。")
 
     async def copy(self, root: str, src_rel: str, dst_rel: str, overwrite: bool = False):
-        raise NotImplementedError("Telegram 适配器是只读的，不支持复制。")
+        raise NotImplementedError("Telegram 适配器不支持复制。")
 
     async def stream_file(self, root: str, rel: str, range_header: str | None):
         from fastapi.responses import StreamingResponse
@@ -156,19 +219,25 @@ class TelegramAdapter:
         try:
             await client.connect()
             message = await client.get_messages(self.chat_id, ids=message_id)
-            if not message or not (message.document or message.video):
+            media = message.document or message.video or message.photo
+            if not message or not media:
                 raise FileNotFoundError(f"在频道 {self.chat_id} 中未找到消息ID为 {message_id} 的文件")
-            
-            media = message.document or message.video
-            file_size = media.size
-            
+
+            if message.photo:
+                photo_size = media.sizes[-1]
+                file_size = photo_size.size if hasattr(photo_size, 'size') else 0
+                mime_type = "image/jpeg"
+            else:
+                file_size = media.size
+                mime_type = media.mime_type or "application/octet-stream"
+
             start = 0
             end = file_size - 1
             status = 200
             
             headers = {
                 "Accept-Ranges": "bytes",
-                "Content-Type": media.mime_type or "application/octet-stream",
+                "Content-Type": mime_type,
                 "Content-Length": str(file_size),
             }
 
@@ -225,14 +294,20 @@ class TelegramAdapter:
         try:
             await client.connect()
             message = await client.get_messages(self.chat_id, ids=message_id)
-            if not message or not (message.document or message.video):
+            media = message.document or message.video or message.photo
+            if not message or not media:
                 raise FileNotFoundError(f"在频道 {self.chat_id} 中未找到消息ID为 {message_id} 的文件")
-            
-            media = message.document or message.video
+
+            if message.photo:
+                photo_size = media.sizes[-1]
+                size = photo_size.size if hasattr(photo_size, 'size') else 0
+            else:
+                size = media.size
+
             return {
                 "name": rel,
                 "is_dir": False,
-                "size": media.size,
+                "size": size,
                 "mtime": int(message.date.timestamp()),
                 "type": "file",
             }
