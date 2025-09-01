@@ -1,4 +1,4 @@
-import { memo, useEffect, useState } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { theme, Pagination } from 'antd';
 import { AppWindowsLayer } from '../../apps/AppWindowsLayer';
@@ -15,6 +15,7 @@ import { GridView } from './components/GridView';
 import { FileListView } from './components/FileListView';
 import { EmptyState } from './components/EmptyState';
 import { ContextMenu } from './components/ContextMenu';
+import { DropzoneOverlay } from './components/DropzoneOverlay';
 import { CreateDirModal } from './components/Modals/CreateDirModal';
 import { RenameModal } from './components/Modals/RenameModal';
 import { ProcessorModal } from './components/Modals/ProcessorModal';
@@ -29,6 +30,8 @@ const FileExplorerPage = memo(function FileExplorerPage() {
   const { navKey = 'files', '*': restPath = '' } = useParams();
   const { token } = theme.useToken();
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [isDragging, setIsDragging] = useState(false);
+  const dragCounter = useRef(0);
 
   // --- Hooks ---
   const { path, entries, loading, pagination, processorTypes, load, navigateTo, goUp, handlePaginationChange, refresh } = useFileExplorer(navKey);
@@ -37,6 +40,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
   const { appWindows, openFileWithDefaultApp, confirmOpenWithApp, closeWindow, toggleMax, bringToFront, updateWindow } = useAppWindows(path);
   const { ctxMenu, blankCtxMenu, openContextMenu, openBlankContextMenu, closeContextMenus } = useContextMenu();
   const uploader = useUploader(path, refresh);
+  const { handleFileDrop } = uploader;
   const processorHook = useProcessor({ path, processorTypes, refresh });
   const { thumbs } = useThumbnails(entries, path);
 
@@ -79,6 +83,37 @@ const FileExplorerPage = memo(function FileExplorerPage() {
     }
   };
 
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current === 0) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    dragCounter.current = 0;
+    handleFileDrop(e.dataTransfer.files);
+  };
+
   return (
     <div
       style={{
@@ -91,6 +126,10 @@ const FileExplorerPage = memo(function FileExplorerPage() {
         position: 'relative'
       }}
       onClick={closeContextMenus}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
     >
       <Header
         navKey={navKey}
@@ -212,6 +251,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
         onStartUpload={uploader.startUpload}
       />
       <AppWindowsLayer windows={appWindows} onClose={closeWindow} onToggleMax={toggleMax} onBringToFront={bringToFront} onUpdateWindow={updateWindow} />
+      <DropzoneOverlay visible={isDragging} />
     </div>
   );
 });

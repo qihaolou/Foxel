@@ -39,10 +39,22 @@ export function useUploader(path: string, onUploadComplete: () => void) {
       }));
       setFiles(newFiles);
       setIsModalVisible(true);
-      // reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+    }
+  };
+
+  const handleFileDrop = (droppedFiles: FileList) => {
+    if (droppedFiles && droppedFiles.length > 0) {
+      const newFiles: UploadFile[] = Array.from(droppedFiles).map(file => ({
+        id: `${file.name}-${Date.now()}`,
+        file,
+        status: 'pending',
+        progress: 0,
+      }));
+      setFiles(newFiles);
+      setIsModalVisible(true);
     }
   };
 
@@ -66,7 +78,7 @@ export function useUploader(path: string, onUploadComplete: () => void) {
           setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, progress } : f));
         });
 
-        const link = await vfsApi.getTempLinkToken(dest, 60 * 60 * 24 * 365 * 10); // 10 years
+        const link = await vfsApi.getTempLinkToken(dest, 60 * 60 * 24 * 365 * 10); 
         const permanentLink = vfsApi.getTempPublicUrl(link.token);
 
         setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: 'success', progress: 100, permanentLink } : f));
@@ -86,6 +98,7 @@ export function useUploader(path: string, onUploadComplete: () => void) {
     openModal,
     closeModal,
     handleFileChange,
+    handleFileDrop,
     startUpload,
   };
 }
