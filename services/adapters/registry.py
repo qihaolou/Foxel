@@ -78,6 +78,31 @@ class RuntimeRegistry:
     def snapshot(self) -> Dict[int, BaseAdapter]:
         return dict(self._instances)
 
+    def remove(self, adapter_id: int):
+        """从缓存中移除一个适配器实例"""
+        if adapter_id in self._instances:
+            del self._instances[adapter_id]
+
+    async def upsert(self, rec: StorageAdapter):
+        """新增或更新一个适配器实例"""
+        if not rec.enabled:
+            self.remove(rec.id)
+            return
+        
+        factory = TYPE_MAP.get(rec.type)
+        if not factory:
+            discover_adapters()
+            factory = TYPE_MAP.get(rec.type)
+            if not factory:
+                return
+
+        try:
+            instance = factory(rec)
+            self._instances[rec.id] = instance
+        except Exception:
+            self.remove(rec.id)
+            pass
+
 
 runtime_registry = RuntimeRegistry()
 discover_adapters()

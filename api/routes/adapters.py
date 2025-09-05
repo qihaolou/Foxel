@@ -54,7 +54,7 @@ async def create_adapter(
     }
 
     rec = await StorageAdapter.create(**adapter_fields)
-    await runtime_registry.refresh()
+    await runtime_registry.upsert(rec)
     await LogService.action(
         "route:adapters",
         f"Created adapter {rec.name}",
@@ -121,7 +121,7 @@ async def update_adapter(
     rec.sub_path = data.sub_path
     await rec.save()
 
-    await runtime_registry.refresh()
+    await runtime_registry.upsert(rec)
     await LogService.action(
         "route:adapters",
         f"Updated adapter {rec.name}",
@@ -139,7 +139,7 @@ async def delete_adapter(
     deleted = await StorageAdapter.filter(id=adapter_id).delete()
     if not deleted:
         raise HTTPException(404, detail="Not found")
-    await runtime_registry.refresh()
+    runtime_registry.remove(adapter_id)
     await LogService.action(
         "route:adapters",
         f"Deleted adapter {adapter_id}",
