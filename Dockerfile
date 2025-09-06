@@ -17,7 +17,7 @@ RUN apt-get update && apt-get install -y nginx git && rm -rf /var/lib/apt/lists/
 
 RUN pip install uv
 COPY pyproject.toml uv.lock ./
-RUN uv sync --system && uv pip install gunicorn
+RUN uv sync && uv pip install gunicorn
 
 RUN git clone https://github.com/DrizzleTime/FoxelUpgrade /app/migrate
 
