@@ -114,7 +114,7 @@ class OneDriveAdapter:
             "type": "dir" if is_dir else "file",
         }
 
-    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50) -> Tuple[List[Dict], int]:
+    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50, sort_by: str = "name", sort_order: str = "asc") -> Tuple[List[Dict], int]:
         """
         列出目录内容。
         由于 Graph API 不支持基于偏移($skip)的分页，此方法将获取所有项目，
@@ -122,6 +122,8 @@ class OneDriveAdapter:
         :param rel: 相对路径。
         :param page_num: 页码。
         :param page_size: 每页大小。
+        :param sort_by: 排序字段
+        :param sort_order: 排序顺序
         :return: 文件/目录列表和总数。
         """
         api_path = self._get_api_path(rel)
@@ -149,8 +151,23 @@ class OneDriveAdapter:
             resp = await self._request("GET", full_url=next_link)
 
         formatted_items = [self._format_item(item) for item in all_items]
-        formatted_items.sort(key=lambda x: (
-            not x["is_dir"], x["name"].lower()))
+        
+        # 排序
+        reverse = sort_order.lower() == "desc"
+        def get_sort_key(item):
+            key = (not item["is_dir"],)
+            sort_field = sort_by.lower()
+            if sort_field == "name":
+                key += (item["name"].lower(),)
+            elif sort_field == "size":
+                key += (item["size"],)
+            elif sort_field == "mtime":
+                key += (item["mtime"],)
+            else:
+                key += (item["name"].lower(),)
+            return key
+        formatted_items.sort(key=get_sort_key, reverse=reverse)
+
         total_count = len(formatted_items)
         start_idx = (page_num - 1) * page_size
         end_idx = start_idx + page_size

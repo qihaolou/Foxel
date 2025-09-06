@@ -306,10 +306,12 @@ async def browse_fs(
     current_user: Annotated[User, Depends(get_current_active_user)],
     full_path: str,
     page_num: int = Query(1, alias="page", ge=1, description="页码"),
-    page_size: int = Query(50, ge=1, le=500, description="每页条数")
+    page_size: int = Query(50, ge=1, le=500, description="每页条数"),
+    sort_by: str = Query("name", description="按字段排序: name, size, mtime"),
+    sort_order: str = Query("asc", description="排序顺序: asc, desc")
 ):
     full_path = '/' + full_path if not full_path.startswith('/') else full_path
-    result = await list_virtual_dir(full_path, page_num, page_size)
+    result = await list_virtual_dir(full_path, page_num, page_size, sort_by, sort_order)
     return success({
         "path": full_path,
         "entries": result["items"],
@@ -336,6 +338,18 @@ async def api_delete(
 async def root_listing(
     current_user: Annotated[User, Depends(get_current_active_user)],
     page_num: int = Query(1, alias="page", ge=1, description="页码"),
-    page_size: int = Query(50, ge=1, le=500, description="每页条数")
+    page_size: int = Query(50, ge=1, le=500, description="每页条数"),
+    sort_by: str = Query("name", description="按字段排序: name, size, mtime"),
+    sort_order: str = Query("asc", description="排序顺序: asc, desc")
 ):
-    return await browse_fs("", page_num, page_size)
+    result = await list_virtual_dir("/", page_num, page_size, sort_by, sort_order)
+    return success({
+        "path": "/",
+        "entries": result["items"],
+        "pagination": {
+            "total": result["total"],
+            "page": result["page"],
+            "page_size": result["page_size"],
+            "pages": result["pages"]
+        }
+    })

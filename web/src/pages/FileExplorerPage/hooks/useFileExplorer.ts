@@ -21,14 +21,16 @@ export function useFileExplorer(navKey: string) {
     showTotal: (total: number, range: [number, number]) => `共 ${total} 项，第 ${range[0]}-${range[1]} 项`,
     pageSizeOptions: ['20', '50', '100', '200']
   });
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
 
-  const load = useCallback(async (p: string, page: number = 1, pageSize: number = 50) => {
+  const load = useCallback(async (p: string, page: number = 1, pageSize: number = 50, sb = sortBy, so = sortOrder) => {
     const canonical = p === '' ? '/' : (p.startsWith('/') ? p : '/' + p);
     setLoading(true);
     try {
       // Load entries and processor types concurrently
       const [res, processors] = await Promise.all([
-        vfsApi.list(canonical === '/' ? '' : canonical, page, pageSize),
+        vfsApi.list(canonical === '/' ? '' : canonical, page, pageSize, sb, so),
         processorsApi.list()
       ]);
       setEntries(res.entries);
@@ -45,7 +47,7 @@ export function useFileExplorer(navKey: string) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [sortBy, sortOrder]);
 
   const navigateTo = useCallback((p: string) => {
     const canonical = p === '' || p === '/' ? '/' : (p.startsWith('/') ? p : '/' + p);
@@ -60,12 +62,18 @@ export function useFileExplorer(navKey: string) {
   }, [path, navigateTo]);
 
   const handlePaginationChange = (page: number, pageSize: number) => {
-    load(path, page, pageSize);
+    load(path, page, pageSize, sortBy, sortOrder);
   };
 
   const refresh = () => {
-    load(path, pagination.current, pagination.pageSize);
+    load(path, pagination.current, pagination.pageSize, sortBy, sortOrder);
   }
+
+  const handleSortChange = (sb: string, so: string) => {
+    setSortBy(sb);
+    setSortOrder(so);
+    load(path, 1, pagination.pageSize, sb, so);
+  };
 
   return {
     path,
@@ -73,10 +81,13 @@ export function useFileExplorer(navKey: string) {
     loading,
     pagination,
     processorTypes,
+    sortBy,
+    sortOrder,
     load,
     navigateTo,
     goUp,
     handlePaginationChange,
     refresh,
+    handleSortChange
   };
 }

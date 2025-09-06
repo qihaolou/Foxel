@@ -52,7 +52,7 @@ class S3Adapter:
     def _get_client(self):
         return self.session.client("s3", endpoint_url=self.endpoint_url)
 
-    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50) -> Tuple[List[Dict], int]:
+    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50, sort_by: str = "name", sort_order: str = "asc") -> Tuple[List[Dict], int]:
         prefix = self._get_s3_key(rel)
         if prefix and not prefix.endswith("/"):
             prefix += "/"
@@ -91,7 +91,21 @@ class S3Adapter:
                         })
 
         # 在内存中排序和分页
-        all_items.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
+        reverse = sort_order.lower() == "desc"
+        def get_sort_key(item):
+            key = (not item["is_dir"],)
+            sort_field = sort_by.lower()
+            if sort_field == "name":
+                key += (item["name"].lower(),)
+            elif sort_field == "size":
+                key += (item["size"],)
+            elif sort_field == "mtime":
+                key += (item["mtime"],)
+            else:
+                key += (item["name"].lower(),)
+            return key
+        all_items.sort(key=get_sort_key, reverse=reverse)
+        
         total_count = len(all_items)
         start_idx = (page_num - 1) * page_size
         end_idx = start_idx + page_size

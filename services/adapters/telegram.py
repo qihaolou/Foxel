@@ -62,7 +62,7 @@ class TelegramAdapter:
     def get_effective_root(self, sub_path: str | None) -> str:
         return ""
 
-    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50) -> Tuple[List[Dict], int]:
+    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50, sort_by: str = "name", sort_order: str = "asc") -> Tuple[List[Dict], int]:
         if rel:
             return [], 0
 
@@ -70,7 +70,7 @@ class TelegramAdapter:
         entries = []
         try:
             await client.connect()
-            messages = await client.get_messages(self.chat_id, limit=50)
+            messages = await client.get_messages(self.chat_id, limit=200)
             for message in messages:
                 if not message:
                     continue
@@ -113,7 +113,30 @@ class TelegramAdapter:
             if client.is_connected():
                 await client.disconnect()
 
-        return entries, len(entries)
+        # 排序
+        reverse = sort_order.lower() == "desc"
+        def get_sort_key(item):
+            key = (not item["is_dir"],)
+            sort_field = sort_by.lower()
+            if sort_field == "name":
+                key += (item["name"].lower(),)
+            elif sort_field == "size":
+                key += (item["size"],)
+            elif sort_field == "mtime":
+                key += (item["mtime"],)
+            else:
+                key += (item["name"].lower(),)
+            return key
+        entries.sort(key=get_sort_key, reverse=reverse)
+        
+        total_count = len(entries)
+        
+        # 分页
+        start_idx = (page_num - 1) * page_size
+        end_idx = start_idx + page_size
+        page_entries = entries[start_idx:end_idx]
+        
+        return page_entries, total_count
 
     async def read_file(self, root: str, rel: str) -> bytes:
         try:

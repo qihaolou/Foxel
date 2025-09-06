@@ -39,7 +39,7 @@ class WebDAVAdapter:
         rel = rel.strip('/')
         return self.base_url if not rel else urljoin(self.base_url, quote(rel) + ('/' if rel.endswith('/') else ''))
 
-    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50) -> Tuple[List[Dict], int]:
+    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50, sort_by: str = "name", sort_order: str = "asc") -> Tuple[List[Dict], int]:
         raw_url = self._build_url(rel)
         url = raw_url if raw_url.endswith('/') else raw_url + '/'
         depth = "1"
@@ -92,16 +92,39 @@ class WebDAVAdapter:
                 "d:collection", NS) is not None if rt_el is not None else href_path.endswith('/')
             size = int(
                 size_el.text) if size_el is not None and size_el.text and size_el.text.isdigit() else 0
+            
+            from email.utils import parsedate_to_datetime
+            mtime = 0
+            if lm_el is not None and lm_el.text:
+                try:
+                    mtime = int(parsedate_to_datetime(lm_el.text).timestamp())
+                except Exception:
+                    mtime = 0
+
             all_entries.append({
                 "name": name,
                 "is_dir": is_dir,
                 "size": 0 if is_dir else size,
-                "mtime": 0,
+                "mtime": mtime,
                 "type": "dir" if is_dir else "file",
             })
 
         # 排序所有条目
-        all_entries.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
+        reverse = sort_order.lower() == "desc"
+        def get_sort_key(item):
+            key = (not item["is_dir"],)
+            sort_field = sort_by.lower()
+            if sort_field == "name":
+                key += (item["name"].lower(),)
+            elif sort_field == "size":
+                key += (item["size"],)
+            elif sort_field == "mtime":
+                key += (item["mtime"],)
+            else:
+                key += (item["name"].lower(),)
+            return key
+        all_entries.sort(key=get_sort_key, reverse=reverse)
+        
         total_count = len(all_entries)
 
         # 应用分页

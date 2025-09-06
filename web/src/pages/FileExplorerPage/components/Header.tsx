@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Flex, Typography, Divider, Button, Space, Tooltip, Segmented, Breadcrumb, Input, theme } from 'antd';
-import { ArrowUpOutlined, ReloadOutlined, PlusOutlined, UploadOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { ArrowUpOutlined, ArrowDownOutlined, ReloadOutlined, PlusOutlined, UploadOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
+import { Select } from 'antd';
 import type { ViewMode } from '../types';
 
 interface HeaderProps {
@@ -8,24 +9,30 @@ interface HeaderProps {
   path: string;
   loading: boolean;
   viewMode: ViewMode;
+  sortBy: string;
+  sortOrder: string;
   onGoUp: () => void;
   onNavigate: (path: string) => void;
   onRefresh: () => void;
   onCreateDir: () => void;
   onUpload: () => void;
   onSetViewMode: (mode: ViewMode) => void;
+  onSortChange: (sortBy: string, sortOrder: string) => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   path,
   loading,
   viewMode,
+  sortBy,
+  sortOrder,
   onGoUp,
   onNavigate,
   onRefresh,
   onCreateDir,
   onUpload,
   onSetViewMode,
+  onSortChange,
 }) => {
   const { token } = theme.useToken();
   const [editingPath, setEditingPath] = useState(false);
@@ -100,6 +107,22 @@ export const Header: React.FC<HeaderProps> = ({
         <Button size="small" icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>刷新</Button>
         <Button size="small" icon={<PlusOutlined />} onClick={onCreateDir}>新建目录</Button>
         <Button size="small" icon={<UploadOutlined />} onClick={onUpload}>上传</Button>
+        <Select
+          size="small"
+          value={sortBy}
+          onChange={(val) => onSortChange(val, sortOrder)}
+          style={{ width: 80 }}
+          options={[
+            { value: 'name', label: '名称' },
+            { value: 'size', label: '大小' },
+            { value: 'mtime', label: '修改时间' },
+          ]}
+        />
+        <Button
+          size="small"
+          icon={sortOrder === 'asc' ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+          onClick={() => onSortChange(sortBy, sortOrder === 'asc' ? 'desc' : 'asc')}
+        />
         <Segmented
           size="small"
           value={viewMode}

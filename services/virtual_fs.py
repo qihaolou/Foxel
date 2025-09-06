@@ -59,7 +59,7 @@ async def _ensure_method(adapter: Any, method: str):
     return func
 
 
-async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) -> Dict:
+async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50, sort_by: str = "name", sort_order: str = "asc") -> Dict:
     norm = (path if path.startswith('/') else '/' + path).rstrip('/') or '/'
     adapters = await StorageAdapter.filter(enabled=True)
 
@@ -100,7 +100,7 @@ async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) ->
     if adapter_model and adapter_instance:
         list_dir = await _ensure_method(adapter_instance, "list_dir")
         try:
-            adapter_entries, adapter_total = await list_dir(effective_root, rel, page_num, page_size)
+            adapter_entries, adapter_total = await list_dir(effective_root, rel, page_num, page_size, sort_by, sort_order)
         except NotADirectoryError:
             raise HTTPException(400, detail="Not a directory")
 
@@ -118,17 +118,32 @@ async def list_virtual_dir(path: str, page_num: int = 1, page_size: int = 50) ->
             ent['is_image'] = is_image_filename(ent['name'])
         else:
             ent['is_image'] = False
+
     all_entries = adapter_entries + mount_entries
-    all_entries.sort(key=lambda x: (not x.get("is_dir"), x["name"].lower()))
-    total_entries = adapter_total + len(mount_entries)
+    
     if mount_entries:
+        reverse = sort_order.lower() == "desc"
+        def get_sort_key(item):
+            key = (not item.get("is_dir"),)
+            sort_field = sort_by.lower()
+            if sort_field == "name":
+                key += (item["name"].lower(),)
+            elif sort_field == "size":
+                key += (item.get("size", 0),)
+            elif sort_field == "mtime":
+                key += (item.get("mtime", 0),)
+            else:
+                key += (item["name"].lower(),)
+            return key
+        all_entries.sort(key=get_sort_key, reverse=reverse)
+        
+        total_entries = adapter_total + len(mount_entries)
         start_idx = (page_num - 1) * page_size
         end_idx = start_idx + page_size
         page_entries = all_entries[start_idx:end_idx]
-
         return page(page_entries, total_entries, page_num, page_size)
-    else:
-        return page(adapter_entries, adapter_total, page_num, page_size)
+    
+    return page(adapter_entries, adapter_total, page_num, page_size)
 
 
 async def read_file(path: str) -> Union[bytes, Any]:

@@ -46,25 +46,18 @@ class LocalAdapter:
             return str(Path(root) / sub_path)
         return root
 
-    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50) -> Tuple[List[Dict], int]:
+    async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50, sort_by: str = "name", sort_order: str = "asc") -> Tuple[List[Dict], int]:
         rel = rel.strip('/')
         base = _safe_join(root, rel) if rel else Path(root)
         if not base.exists():
             return [], 0
         if not base.is_dir():
             raise NotADirectoryError(rel)
-        
-        # 获取所有文件名并排序
-        all_names = await asyncio.to_thread(lambda: sorted(os.listdir(base), key=str.lower))
-        total_count = len(all_names)
-        
-        # 计算分页范围
-        start_idx = (page_num - 1) * page_size
-        end_idx = start_idx + page_size
-        page_names = all_names[start_idx:end_idx]
+
+        all_names = await asyncio.to_thread(os.listdir, base)
         
         entries = []
-        for name in page_names:
+        for name in all_names:
             fp = base / name
             try:
                 st = await asyncio.to_thread(fp.stat)
@@ -79,10 +72,35 @@ class LocalAdapter:
                 "mode": stat.S_IMODE(st.st_mode),
                 "type": "dir" if is_dir else "file",
             })
+
+        # 排序
+        reverse = sort_order.lower() == "desc"
         
-        # 按目录优先排序
-        entries.sort(key=lambda x: (not x["is_dir"], x["name"].lower()))
-        return entries, total_count
+        def get_sort_key(item):
+            # 基础排序键，目录优先
+            key = (not item["is_dir"],)
+            sort_field = sort_by.lower()
+            
+            if sort_field == "name":
+                key += (item["name"].lower(),)
+            elif sort_field == "size":
+                key += (item["size"],)
+            elif sort_field == "mtime":
+                key += (item["mtime"],)
+            else: # 默认按名称
+                key += (item["name"].lower(),)
+            return key
+
+        entries.sort(key=get_sort_key, reverse=reverse)
+        
+        total_count = len(entries)
+        
+        # 分页
+        start_idx = (page_num - 1) * page_size
+        end_idx = start_idx + page_size
+        page_entries = entries[start_idx:end_idx]
+        
+        return page_entries, total_count
 
     async def read_file(self, root: str, rel: str) -> bytes:
         fp = _safe_join(root, rel)
