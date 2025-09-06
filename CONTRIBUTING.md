@@ -70,8 +70,10 @@
 
 2. **创建并激活 Python 虚拟环境**
 
+    我们推荐使用 `uv` 来管理虚拟环境，以获得最佳性能。
+
     ```bash
-    python3 -m venv .venv
+    uv venv
     source .venv/bin/activate
     # On Windows: .venv\Scripts\activate
     ```
@@ -79,7 +81,7 @@
 3. **安装依赖**
 
     ```bash
-    pip install -r requirements.txt
+    uv sync
     ```
 
 4. **初始化环境**
