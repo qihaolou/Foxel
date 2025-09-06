@@ -63,7 +63,7 @@ class OneDriveAdapter:
             "refresh_token": self.refresh_token,
             "grant_type": "refresh_token",
         }
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=20.0) as client:
             resp = await client.post(MS_OAUTH_URL, data=data)
             resp.raise_for_status()
             token_data = resp.json()
@@ -90,11 +90,10 @@ class OneDriveAdapter:
             headers.update(kwargs.pop("headers"))
 
         url = full_url if full_url else f"{MS_GRAPH_URL}/me/drive/root{api_path_segment}"
-        async with httpx.AsyncClient() as client:
+        async with httpx.AsyncClient(timeout=60.0) as client:
             resp = await client.request(method, url, headers=headers, **kwargs)
-            # 如果 token 过期 (401)，刷新并重试一次
             if resp.status_code == 401:
-                self._access_token = None  # 强制刷新
+                self._access_token = None
                 token = await self._get_access_token()
                 headers["Authorization"] = f"Bearer {token}"
                 resp = await client.request(method, url, headers=headers, **kwargs)
@@ -118,6 +117,7 @@ class OneDriveAdapter:
     async def list_dir(self, root: str, rel: str, page_num: int = 1, page_size: int = 50) -> Tuple[List[Dict], int]:
         """
         列出目录内容。
+        由于 Graph API 不支持基于偏移($skip)的分页，此方法将获取所有项目，
         :param root: 根路径 (在此适配器中未使用，通过配置的 root 确定)。
         :param rel: 相对路径。
         :param page_num: 页码。
@@ -126,14 +126,9 @@ class OneDriveAdapter:
         """
         api_path = self._get_api_path(rel)
         children_path = f"{api_path}:/children" if api_path else "/children"
-
-        # Graph API 的分页是基于 @odata.nextLink token 的。
-        # 为了支持自定义排序（文件夹在前），我们必须获取所有项目，
-        # 然后在内存中进行排序和分页。此版本通过处理分页链接来稳健地获取所有项目。
         all_items = []
-
-        # 初始请求
-        resp = await self._request("GET", api_path_segment=children_path, params={"$top": 200})
+        params = {"$top": 999}
+        resp = await self._request("GET", api_path_segment=children_path, params=params)
 
         while True:
             if resp.status_code == 404 and not all_items:
@@ -151,14 +146,11 @@ class OneDriveAdapter:
             if not next_link:
                 break
 
-            # 后续分页请求
             resp = await self._request("GET", full_url=next_link)
 
         formatted_items = [self._format_item(item) for item in all_items]
-        # 排序：文件夹在前，然后按名称排序
         formatted_items.sort(key=lambda x: (
             not x["is_dir"], x["name"].lower()))
-
         total_count = len(formatted_items)
         start_idx = (page_num - 1) * page_size
         end_idx = start_idx + page_size
@@ -362,7 +354,7 @@ class OneDriveAdapter:
 
         async def file_iterator():
             nonlocal start, end
-            async with httpx.AsyncClient() as client:
+            async with httpx.AsyncClient(timeout=60.0) as client:
                 req_headers = {'Range': f'bytes={start}-{end}'}
                 async with client.stream("GET", download_url, headers=req_headers) as stream_resp:
                     stream_resp.raise_for_status()
@@ -389,7 +381,7 @@ class OneDriveAdapter:
             resp = await self._request("GET", api_path_segment=thumb_path)
             if resp.status_code == 200:
                 thumb_data = resp.json()
-                async with httpx.AsyncClient() as client:
+                async with httpx.AsyncClient(timeout=30.0) as client:
                     thumb_resp = await client.get(thumb_data['url'])
                     thumb_resp.raise_for_status()
                     return thumb_resp.content
