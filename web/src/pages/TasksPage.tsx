@@ -1,7 +1,7 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Table, Button, Space, Drawer, Form, Input, Switch, message, Typography, Popconfirm, Select } from 'antd';
+import { Table, Button, Space, Drawer, Form, Input, Switch, message, Typography, Popconfirm, Select, Modal, Tag } from 'antd';
 import PageCard from '../components/PageCard';
-import { tasksApi, type AutomationTask } from '../api/tasks';
+import { tasksApi, type AutomationTask, type QueuedTask } from '../api/tasks';
 import { processorsApi, type ProcessorTypeMeta } from '../api/processors';
 import { ProcessorConfigForm } from '../components/ProcessorConfigForm';
 
@@ -12,6 +12,9 @@ const TasksPage = memo(function TasksPage() {
   const [editing, setEditing] = useState<AutomationTask | null>(null);
   const [form] = Form.useForm();
   const [availableProcessors, setAvailableProcessors] = useState<ProcessorTypeMeta[]>([]);
+  const [queueModalOpen, setQueueModalOpen] = useState(false);
+  const [queuedTasks, setQueuedTasks] = useState<QueuedTask[]>([]);
+  const [queueLoading, setQueueLoading] = useState(false);
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -86,11 +89,50 @@ const TasksPage = memo(function TasksPage() {
     }
   };
 
+  const fetchQueue = async () => {
+    setQueueLoading(true);
+    try {
+      const tasks = await tasksApi.getQueue();
+      setQueuedTasks(tasks);
+    } catch (e: any) {
+      message.error(e.message || '加载队列失败');
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  const openQueueModal = () => {
+    setQueueModalOpen(true);
+    fetchQueue();
+  };
+
+  const toggleEnabled = async (rec: AutomationTask, enabled: boolean) => {
+    setEditing(rec);
+    setLoading(true);
+    try {
+      await tasksApi.update(rec.id, { enabled });
+      message.success('状态已更新');
+      fetchList();
+    } catch (e: any) {
+      message.error(e.message || '更新失败');
+    } finally {
+      setEditing(null);
+      setLoading(false);
+    }
+  };
+
   const columns = [
     { title: '名称', dataIndex: 'name' },
     { title: '触发事件', dataIndex: 'event', width: 120 },
     { title: '处理器', dataIndex: 'processor_type', width: 180 },
-    { title: '启用', dataIndex: 'enabled', width: 80, render: (v: boolean) => <Switch checked={v} size="small" disabled /> },
+    {
+      title: '启用', dataIndex: 'enabled', width: 80, render: (v: boolean, rec: AutomationTask) => <Switch
+        checked={v}
+        size="small"
+        loading={loading && editing?.id === rec.id}
+        onChange={(checked) => toggleEnabled(rec, checked)}
+      />
+    },
     {
       title: '操作',
       width: 160,
@@ -115,6 +157,7 @@ const TasksPage = memo(function TasksPage() {
       extra={
         <Space>
           <Button onClick={fetchList} loading={loading}>刷新</Button>
+          <Button onClick={openQueueModal}>运行中的任务</Button>
           <Button type="primary" onClick={openCreate}>新建任务</Button>
         </Space>
       }
@@ -174,6 +217,40 @@ const TasksPage = memo(function TasksPage() {
           />
         </Form>
       </Drawer>
+      <Modal
+        title="当前任务队列"
+        open={queueModalOpen}
+        onCancel={() => setQueueModalOpen(false)}
+        width={800}
+        footer={[
+          <Button key="refresh" onClick={fetchQueue} loading={queueLoading}>刷新</Button>,
+          <Button key="close" onClick={() => setQueueModalOpen(false)}>关闭</Button>
+        ]}
+      >
+        <Table
+          size="small"
+          rowKey="id"
+          dataSource={queuedTasks}
+          loading={queueLoading}
+          pagination={false}
+          columns={[
+            { title: 'ID', dataIndex: 'id', width: 120, render: (id) => <Typography.Text style={{ fontSize: 12 }} copyable={{ text: id }}>{id.slice(0, 8)}</Typography.Text> },
+            { title: '任务名', dataIndex: 'name' },
+            { title: '参数', dataIndex: 'task_info', render: (info) => <Typography.Text type="secondary" style={{ fontSize: 12 }}>{JSON.stringify(info)}</Typography.Text> },
+            {
+              title: '状态', dataIndex: 'status', width: 100, render: (status: QueuedTask['status']) => {
+                const colorMap = {
+                  pending: 'default',
+                  running: 'processing',
+                  success: 'success',
+                  failed: 'error'
+                };
+                return <Tag color={colorMap[status]}>{status}</Tag>;
+              }
+            },
+          ]}
+        />
+      </Modal>
     </PageCard>
   );
 });

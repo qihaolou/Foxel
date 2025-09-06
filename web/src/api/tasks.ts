@@ -14,9 +14,19 @@ export interface AutomationTask {
 export type AutomationTaskCreate = Omit<AutomationTask, 'id'>;
 export type AutomationTaskUpdate = Partial<AutomationTaskCreate>;
 
+export interface QueuedTask {
+  id: string;
+  name: string;
+  status: 'pending' | 'running' | 'success' | 'failed';
+  result?: any;
+  error?: string;
+  task_info: Record<string, any>;
+}
+
 export const tasksApi = {
   list: () => request<AutomationTask[]>('/tasks/'),
   create: (payload: AutomationTaskCreate) => request<AutomationTask>('/tasks/', { method: 'POST', json: payload }),
   update: (id: number, payload: AutomationTaskUpdate) => request<AutomationTask>(`/tasks/${id}`, { method: 'PUT', json: payload }),
   remove: (id: number) => request<void>(`/tasks/${id}`, { method: 'DELETE' }),
+  getQueue: () => request<QueuedTask[]>('/tasks/queue'),
 };
