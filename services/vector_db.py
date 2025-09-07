@@ -75,3 +75,9 @@ class VectorDBService:
             output_fields=["path"]
         )
         return [[{'id': r['path'], 'distance': 1.0, 'entity': {'path': r['path']}} for r in results]]
+
+    def clear_all_data(self):
+        """清空所有集合的内容"""
+        collections = self.client.list_collections()
+        for collection_name in collections:
+            self.client.drop_collection(collection_name)

@@ -1,8 +1,9 @@
-import { Form, Input, Button, message, Tabs, Space, Card } from 'antd';
+import { Form, Input, Button, message, Tabs, Space, Card, Select, Modal } from 'antd';
 import { useEffect, useState } from 'react';
 import PageCard from '../../components/PageCard';
 import { getAllConfig, setConfig } from '../../api/config';
-import { AppstoreOutlined, RobotOutlined } from '@ant-design/icons';
+import { vectorDBApi } from '../../api/vectorDB';
+import { AppstoreOutlined, RobotOutlined, DatabaseOutlined } from '@ant-design/icons';
 
 const APP_CONFIG_KEYS: {key: string, label: string, default?: string}[] = [
   { key: 'APP_NAME', label: '应用名称' },
@@ -132,6 +133,54 @@ export default function SystemSettingsPage() {
                     </Button>
                   </Form.Item>
                 </Form>
+              ),
+            },
+            {
+              key: 'vector-db',
+              label: (
+                <span>
+                  <DatabaseOutlined style={{ marginRight: 8 }} />
+                  向量数据库
+                </span>
+              ),
+              children: (
+                <Card title="向量数据库设置" style={{ marginTop: 24 }}>
+                  <Form layout="vertical">
+                    <Form.Item label="数据库类型">
+                      <Select
+                        size="large"
+                        value="Milvus Lite"
+                        disabled
+                        options={[{ value: 'Milvus Lite', label: 'Milvus Lite' }]}
+                      />
+                    </Form.Item>
+                    <Form.Item>
+                      <Button
+                        danger
+                        block
+                        onClick={() => {
+                          Modal.confirm({
+                            title: '确认清空向量数据库？',
+                            content: '此操作将删除所有集合中的所有数据，且不可逆。',
+                            okText: '确认清空',
+                            okType: 'danger',
+                            cancelText: '取消',
+                            onOk: async () => {
+                              try {
+                                await vectorDBApi.clearAll();
+                                message.success('向量数据库已清空');
+                              } catch (e: any) {
+                                message.error(e.message || '清空失败');
+                              }
+                            },
+                          });
+                        }}
+                      >
+                        清空向量库
+                      </Button>
+                    </Form.Item>
+                  </Form>
+                </Card>
               ),
             },
           ]}
