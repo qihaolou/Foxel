@@ -1,21 +1,27 @@
 import { memo, useState, useEffect } from 'react';
 import { Card, Spin, Button, Typography, Empty } from 'antd';
-import { DownloadOutlined } from '@ant-design/icons';
+import { DownloadOutlined, ArrowLeftOutlined } from '@ant-design/icons';
 import { shareApi, type ShareInfo } from '../../api/share';
 import { type VfsEntry } from '../../api/vfs';
 import { format, parseISO } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
+import { VideoViewer } from './VideoViewer';
 
 const { Title, Text } = Typography;
+
+const isImageViewer = (name: string) => /\.(jpg|jpeg|png|gif|bmp|webp|svg)$/i.test(name);
+const isVideoViewable = (name: string) => /\.(mp4|webm|ogg|m4v|mov)$/i.test(name);
 
 interface FileViewerProps {
   token: string;
   shareInfo: ShareInfo;
   entry: VfsEntry;
   password?: string;
+  onBack: () => void;
+  path: string;
 }
 
-export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, password }: FileViewerProps) {
+export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, password, onBack, path }: FileViewerProps) {
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<string>('');
   const [error, setError] = useState('');
@@ -25,7 +31,7 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
       setLoading(true);
       setError('');
       try {
-        const url = shareApi.downloadUrl(token, entry.name, password);
+        const url = shareApi.downloadUrl(token, path, password);
         const response = await fetch(url);
         if (!response.ok) {
           throw new Error('无法加载文件');
@@ -44,7 +50,7 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
     } else {
       setLoading(false);
     }
-  }, [token, entry.name, password]);
+  }, [token, entry.name, password, path]);
 
   const renderContent = () => {
     if (loading) {
@@ -53,9 +59,21 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
     if (error) {
       return <Empty description={error} />;
     }
+
+    const downloadUrl = shareApi.downloadUrl(token, path, password);
+
+    if (isImageViewer(entry.name)) {
+      return <img src={downloadUrl} alt={entry.name} style={{ maxWidth: '100%' }} />;
+    }
+
+    if (isVideoViewable(entry.name)) {
+      return <VideoViewer token={token} entry={entry} password={password} path={path} />;
+    }
+
     if (entry.name.endsWith('.md')) {
       return <ReactMarkdown>{content}</ReactMarkdown>;
     }
+
     return (
       <Empty
         description={
@@ -64,7 +82,7 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
             <Button
               type="primary"
               icon={<DownloadOutlined />}
-              href={shareApi.downloadUrl(token, entry.name, password)}
+              href={downloadUrl}
               download
             >
               下载文件
@@ -85,9 +103,16 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
         </Text>
         <div style={{ marginTop: 16 }}>
           <Button
+            style={{ marginBottom: 16, marginRight: 8 }}
+            icon={<ArrowLeftOutlined />}
+            onClick={onBack}
+          >
+            返回
+          </Button>
+          <Button
             style={{ marginBottom: 16 }}
             icon={<DownloadOutlined />}
-            href={shareApi.downloadUrl(token, entry.name, password)}
+            href={shareApi.downloadUrl(token, path, password)}
             download
           >
             下载

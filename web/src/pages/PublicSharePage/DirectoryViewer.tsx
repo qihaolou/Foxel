@@ -1,5 +1,5 @@
 import { memo, useState, useEffect, useCallback } from 'react';
-import { Card, message, List, Typography, Button, Empty, Breadcrumb } from 'antd';
+import { Card, List, Typography, Button, Empty, Breadcrumb } from 'antd';
 import { FileOutlined, FolderOutlined, DownloadOutlined } from '@ant-design/icons';
 import { shareApi, type ShareInfo } from '../../api/share';
 import { type VfsEntry } from '../../api/vfs';
@@ -11,9 +11,10 @@ interface DirectoryViewerProps {
     token: string;
     shareInfo: ShareInfo;
     password?: string;
+    onFileClick: (entry: VfsEntry, path: string) => void;
 }
 
-export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo, password }: DirectoryViewerProps) {
+export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo, password, onFileClick }: DirectoryViewerProps) {
     const [loading, setLoading] = useState(true);
     const [entries, setEntries] = useState<VfsEntry[]>([]);
     const [currentPath, setCurrentPath] = useState('/');
@@ -38,11 +39,11 @@ export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo,
     }, [loadData, currentPath]);
 
     const handleEntryClick = (entry: VfsEntry) => {
+        const newPath = (currentPath === '/' ? '' : currentPath) + '/' + entry.name;
         if (entry.is_dir) {
-            const newPath = (currentPath === '/' ? '' : currentPath) + '/' + entry.name;
             loadData(newPath);
         } else {
-            message.info('暂不支持预览');
+            onFileClick(entry, newPath);
         }
     };
 

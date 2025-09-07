@@ -10,7 +10,7 @@ const PublicSharePage = memo(function PublicSharePage() {
   const { token } = useParams<{ token: string }>();
   const [loading, setLoading] = useState(true);
   const [shareInfo, setShareInfo] = useState<ShareInfo | null>(null);
-  const [entry, setEntry] = useState<VfsEntry | null>(null);
+  const [previewFile, setPreviewFile] = useState<{ entry: VfsEntry, path: string } | null>(null);
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
   const [verified, setVerified] = useState(false);
@@ -37,7 +37,9 @@ const PublicSharePage = memo(function PublicSharePage() {
         const listing = await shareApi.listDir(token, '/', currentPassword);
         if (listing.entries.length === 1) {
           const singleEntry = listing.entries[0];
-          setEntry(singleEntry);
+          if (!singleEntry.is_dir) {
+            setPreviewFile({ entry: singleEntry, path: '/' + singleEntry.name });
+          }
         }
       }
 
@@ -99,11 +101,27 @@ const PublicSharePage = memo(function PublicSharePage() {
     return <div style={{ textAlign: 'center', padding: 50 }}><Empty description="无法加载分享信息" /></div>;
   }
 
-  if (entry && !entry.is_dir) {
-    return <FileViewer token={token!} shareInfo={shareInfo} entry={entry} password={password} />;
-  } else {
-    return <DirectoryViewer token={token!} shareInfo={shareInfo} password={password} />;
+  const handleFileClick = (entry: VfsEntry, path: string) => {
+    setPreviewFile({ entry, path });
+  };
+
+  const handleBack = () => {
+    setPreviewFile(null);
+  };
+
+  if (previewFile) {
+    return (
+      <FileViewer
+        token={token!}
+        shareInfo={shareInfo}
+        entry={previewFile.entry}
+        password={password}
+        onBack={handleBack}
+        path={previewFile.path}
+      />
+    );
   }
+  return <DirectoryViewer token={token!} shareInfo={shareInfo} password={password} onFileClick={handleFileClick} />;
 });
 
 export default PublicSharePage;
