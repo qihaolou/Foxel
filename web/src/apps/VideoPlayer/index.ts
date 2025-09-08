@@ -7,7 +7,7 @@ export const descriptor: AppDescriptor = {
   supported: (entry) => {
     if (entry.is_dir) return false;
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';
-    return ['mp4','webm','ogg','m4v','mov'].includes(ext);
+    return ['mp4','webm','ogg','m4v','mov','mkv','avi','wmv','flv','3gp'].includes(ext);
   },
   component: VideoPlayerApp,
   default: true,
