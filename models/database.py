@@ -81,3 +81,29 @@ class ShareLink(Model):
 
     class Meta:
         table = "share_links"
+
+
+class Plugin(Model):
+    id = fields.IntField(pk=True)
+    url = fields.CharField(max_length=2048)
+    enabled = fields.BooleanField(default=True)
+
+    key = fields.CharField(max_length=100, null=True)
+    name = fields.CharField(max_length=255, null=True)
+    version = fields.CharField(max_length=50, null=True)
+    supported_exts = fields.JSONField(null=True)
+
+    default_bounds = fields.JSONField(null=True)
+    default_maximized = fields.BooleanField(null=True)
+
+    icon = fields.CharField(max_length=2048, null=True)
+    description = fields.TextField(null=True)
+    author = fields.CharField(max_length=255, null=True)
+    website = fields.CharField(max_length=2048, null=True)
+    github = fields.CharField(max_length=2048, null=True)
+
+    created_at = fields.DatetimeField(auto_now_add=True)
+    updated_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:
+        table = "plugins"

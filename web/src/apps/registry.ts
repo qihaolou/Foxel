@@ -1,9 +1,11 @@
 import type { VfsEntry } from '../api/client';
 import type { AppDescriptor } from './types';
+import React from 'react';
+import { pluginsApi, type PluginItem } from '../api/plugins';
+import { PluginAppHost } from './PluginHost';
 const apps: AppDescriptor[] = [];
 
 // 使用 import.meta.glob 动态导入所有应用
-// vite-glob-ignore
 const appModules = import.meta.glob('./*/index.ts');
 
 async function loadApps() {
@@ -16,11 +18,34 @@ async function loadApps() {
       }
     }
   }
+  try {
+    const items = await pluginsApi.list();
+    items.filter(p => p.enabled !== false).forEach((p) => registerPluginAsApp(p));
+  } catch (e) {
+  }
 }
 
-// 立即加载并注册所有应用
-loadApps();
+function registerPluginAsApp(p: PluginItem) {
+  const key = 'plugin:' + p.id;
+  if (apps.find(a => a.key === key)) return;
+  const supported = (entry: VfsEntry) => {
+    if (entry.is_dir) return false;
+    const ext = entry.name.split('.').pop()?.toLowerCase() || '';
+    if (!p.supported_exts || p.supported_exts.length === 0) return true;
+    return p.supported_exts.includes(ext);
+  };
+  apps.push({
+    key,
+    name: p.name || `插件 ${p.id}`,
+    supported,
+    component: (props: any) => React.createElement(PluginAppHost, { plugin: p, ...props }),
+    default: false,
+    defaultBounds: p.default_bounds || undefined,
+    defaultMaximized: p.default_maximized || undefined,
+  });
+}
 
+loadApps();
 
 export function getAppsForEntry(entry: VfsEntry): AppDescriptor[] {
   return apps.filter(a => a.supported(entry));
@@ -43,3 +68,27 @@ export function getDefaultAppForEntry(entry: VfsEntry): AppDescriptor | undefine
 
 export type { AppDescriptor };
 export type { AppComponentProps } from './types';
+
+export async function reloadPluginApps() {
+  try {
+    const items = await pluginsApi.list();
+    const keepKeys = new Set(items.filter(p => p.enabled !== false).map(p => 'plugin:' + p.id));
+    for (let i = apps.length - 1; i >= 0; i--) {
+      const a = apps[i];
+      if (a.key.startsWith('plugin:') && !keepKeys.has(a.key)) {
+        apps.splice(i, 1);
+      }
+    }
+    items.filter(p => p.enabled !== false).forEach(p => {
+      const key = 'plugin:' + p.id;
+      const existing = apps.find(a => a.key === key);
+      if (!existing) {
+        registerPluginAsApp(p);
+      } else {
+        existing.name = p.name || `插件 ${p.id}`;
+        existing.defaultBounds = p.default_bounds || undefined;
+        existing.defaultMaximized = p.default_maximized || undefined;
+      }
+    });
+  } catch { }
+}

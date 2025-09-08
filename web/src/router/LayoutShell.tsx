@@ -11,6 +11,7 @@ import OfflineDownloadPage from '../pages/OfflineDownloadPage.tsx';
 import SystemSettingsPage from '../pages/SystemSettingsPage/SystemSettingsPage.tsx';
 import LogsPage from '../pages/LogsPage.tsx';
 import BackupPage from '../pages/SystemSettingsPage/BackupPage.tsx';
+import PluginsPage from '../pages/PluginsPage.tsx';
 
 const LayoutShell = memo(function LayoutShell() {
   const { navKey = 'files' } = useParams();
@@ -34,10 +35,10 @@ const LayoutShell = memo(function LayoutShell() {
               {navKey === 'share' && <SharePage />}
               {navKey === 'tasks' && <TasksPage />}
               {navKey === 'offline' && <OfflineDownloadPage />}
+              {navKey === 'plugins' && <PluginsPage />}
               {navKey === 'settings' && <SystemSettingsPage />}
               {navKey === 'logs' && <LogsPage />}
               {navKey === 'backup' && <BackupPage />}
-              {!['adapters','files','image','video','doc','fav','recent','recycle','share','tasks','offline','settings', 'logs', 'backup'].includes(navKey!) && <FileExplorerPage />}
             </Flex>
           </div>
         </Layout.Content>

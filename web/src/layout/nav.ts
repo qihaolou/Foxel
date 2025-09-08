@@ -8,6 +8,7 @@ import {
   RobotOutlined,
   BugOutlined,
   DatabaseOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import type { ReactNode } from 'react';
 
@@ -30,6 +31,7 @@ export const navGroups: NavGroup[] = [
       { key: 'share', icon: React.createElement(ShareAltOutlined), label: '我的分享' },
       { key: 'offline', icon: React.createElement(CloudDownloadOutlined), label: '离线下载' },
       { key: 'adapters', icon: React.createElement(ApiOutlined), label: '存储挂载' },
+      { key: 'plugins', icon: React.createElement(AppstoreOutlined), label: '应用中心' },
     ]
   },
   {
