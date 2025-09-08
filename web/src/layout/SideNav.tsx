@@ -15,6 +15,7 @@ import {
 import '../styles/sider-menu.css';
 import { getLatestVersion } from '../api/config.ts';
 import ReactMarkdown from 'react-markdown';
+import { useTheme } from '../contexts/ThemeContext';
 const { Sider } = Layout;
 
 export interface SideNavProps {
@@ -27,6 +28,7 @@ export interface SideNavProps {
 const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle }: SideNavProps) {
   const status = useSystemStatus();
   const { token } = theme.useToken();
+  const { resolvedMode } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
   const [latestVersion, setLatestVersion] = useState<{
@@ -85,10 +87,16 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
                 height: 24,
                 objectFit: 'contain',
                 marginRight: collapsed ? 0 : 8,
-                ...(status?.logo?.endsWith('.svg') && { filter: 'brightness(0) saturate(100%)' })
+                ...(resolvedMode === 'dark'
+                  ? { filter: 'brightness(0) invert(1)' }
+                  : (status?.logo?.endsWith('.svg') ? { filter: 'brightness(0) saturate(100%)' } : {}))
               }}
             />
-            {!collapsed && <span style={{ fontWeight: 700 }}>{status?.title}</span>}
+            {!collapsed && (
+              <span style={{ fontWeight: 700, color: resolvedMode === 'dark' ? '#fff' : token.colorText }}>
+                {status?.title}
+              </span>
+            )}
           </div>
           {/* 展开时显示收缩按钮 */}
           {!collapsed && (

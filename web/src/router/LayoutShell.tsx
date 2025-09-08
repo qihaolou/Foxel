@@ -18,17 +18,17 @@ const LayoutShell = memo(function LayoutShell() {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', background: 'var(--ant-color-bg-layout)' }}>
       <SideNav
         collapsed={collapsed}
         onToggle={() => setCollapsed(c => !c)}
         activeKey={navKey}
         onChange={(key) => navigate(`/${key}`)}
       />
-      <Layout>
+      <Layout style={{ background: 'var(--ant-color-bg-layout)' }}>
         <TopHeader collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
-        <Layout.Content style={{ padding: 16 }}>
-          <div style={{ minHeight: 'calc(100vh - 56px - 32px)' }}>
+        <Layout.Content style={{ padding: 16, background: 'var(--ant-color-bg-layout)' }}>
+          <div style={{ minHeight: 'calc(100vh - 56px - 32px)', background: 'var(--ant-color-bg-layout)' }}>
             <Flex vertical gap={16}>
               {navKey === 'adapters' && <AdaptersPage />}
               {navKey === 'files' && <FileExplorerPage />}

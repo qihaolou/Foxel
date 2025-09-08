@@ -243,8 +243,8 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
               left: w.maximized ? 0 : w.x,    
               width: w.maximized ? '100vw' : w.width,
               height: w.maximized ? '100vh' : w.height,
-              background: 'rgba(240, 242, 245, 0.7)', // Semi-transparent background
-              border: '1px solid rgba(255, 255, 255, 0.18)',
+              background: 'var(--ant-color-bg-elevated, var(--ant-color-bg-container))',
+              border: '1px solid var(--ant-color-border-secondary, rgba(255,255,255,0.18))',
               borderRadius: w.maximized ? 0 : 12,
               boxShadow: w.maximized
                 ? 'none'
@@ -254,7 +254,7 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
-              backdropFilter: 'blur(20px) saturate(180%)', // Enhanced blur effect
+              backdropFilter: 'blur(12px) saturate(150%)',
               zIndex: 3000 + idx,
               willChange: 'left,top,width,height',
               transition: interacting ? 'none' : 'top .15s,left .15s,width .15s,height .15s,box-shadow .25s'
@@ -269,9 +269,9 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '0 12px',
-                background: 'rgba(0, 0, 0, 0.25)', // Lighter, transparent title bar
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                color: '#333', // Darker text for readability
+                background: 'var(--ant-color-fill-secondary, rgba(0,0,0,0.25))',
+                borderBottom: '1px solid var(--ant-color-border-secondary, rgba(255,255,255,0.1))',
+                color: 'var(--ant-color-text, #333)',
                 fontSize: 13,
                 fontWeight: 600,
                 letterSpacing: .2,
@@ -298,7 +298,7 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
                   icon={w.maximized ? <FullscreenExitOutlined /> : <FullscreenOutlined />}
                   onClick={() => onToggleMax(w.id)}
                   style={{
-                    color: '#555',
+                    color: 'var(--ant-color-text-secondary, #555)',
                     width: 30,
                     height: 30,
                     display: 'flex',
@@ -314,7 +314,7 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
                   icon={<CloseOutlined />}
                   onClick={() => onClose(w.id)}
                   style={{
-                    color: '#ff4d4f',
+                    color: 'var(--ant-color-error, #ff4d4f)',
                     width: 30,
                     height: 30,
                     display: 'flex',

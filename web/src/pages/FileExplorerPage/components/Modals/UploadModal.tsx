@@ -32,7 +32,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onSt
       case 'success':
         return (
           <Flex align="center" gap={8}>
-            <CheckCircleFilled style={{ color: '#52c41a' }} />
+            <CheckCircleFilled style={{ color: 'var(--ant-color-success, #52c41a)' }} />
             <Typography.Text type="secondary" style={{ verticalAlign: 'middle' }}>上传成功</Typography.Text>
             <Button icon={<CopyOutlined />} size="small" onClick={() => handleCopy(file.permanentLink!)} type="text" />
           </Flex>
@@ -40,7 +40,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onSt
       case 'error':
         return (
             <Flex align="center" gap={8}>
-                <CloseCircleFilled style={{ color: '#ff4d4f' }} />
+                <CloseCircleFilled style={{ color: 'var(--ant-color-error, #ff4d4f)' }} />
                 <Typography.Text type="danger" title={file.error}>上传失败</Typography.Text>
             </Flex>
         );
@@ -71,7 +71,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onSt
               borderRadius: 8,
               transition: 'background-color 0.2s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#f0f0f0'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'var(--ant-color-fill-tertiary, #f0f0f0)'; }}
             onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; }}
           >
             <Flex justify="space-between" align="center" style={{ width: '100%' }}>

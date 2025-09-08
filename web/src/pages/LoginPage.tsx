@@ -44,7 +44,7 @@ export default function LoginPage() {
       height: '100vh',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(to right, #f0f2f5, #d7d7d7)'
+      background: 'linear-gradient(to right, var(--ant-color-bg-layout, #f0f2f5), var(--ant-color-fill-secondary, #d7d7d7))'
     }}>
       <div style={{
         display: 'flex',
@@ -52,11 +52,11 @@ export default function LoginPage() {
         maxWidth: '1200px',
         height: '70%',
         maxHeight: '700px',
-        backgroundColor: 'rgba(255, 255, 255, 0.8)',
+        backgroundColor: 'var(--ant-color-bg-container, #fff)',
         borderRadius: '20px',
         boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
         backdropFilter: 'blur(5px)',
-        border: '1px solid rgba(255, 255, 255, 0.3)',
+        border: '1px solid var(--ant-color-border-secondary, #e5e5e5)',
         overflow: 'hidden'
       }}>
         <div style={{
@@ -71,7 +71,7 @@ export default function LoginPage() {
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
                   <img src={status?.logo} alt="Foxel Logo" style={{ width: 32, marginRight: 16 }} />
-                  <Title level={2} style={{ margin: 0, color: '#111' }}>欢迎回来</Title>
+                  <Title level={2} style={{ margin: 0, color: 'var(--ant-color-text, #111)' }}>欢迎回来</Title>
                 </div>
                 <Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>登录到您的 Foxel 账户</Text>
               </div>
@@ -115,8 +115,8 @@ export default function LoginPage() {
         </div>
         <div style={{
           width: '50%',
-          backgroundColor: '#f0f2f5',
-          backgroundImage: `radial-gradient(#d7d7d7 1px, transparent 1px)`,
+          backgroundColor: 'var(--ant-color-fill-tertiary, #f0f2f5)',
+          backgroundImage: `radial-gradient(var(--ant-color-fill-secondary, #d7d7d7) 1px, transparent 1px)`,
           backgroundSize: '16px 16px',
           display: 'flex',
           flexDirection: 'column',
@@ -131,27 +131,27 @@ export default function LoginPage() {
             </Text>
             <div style={{ marginTop: '32px' }}>
               <Space direction="vertical" size="middle" style={{ width: '100%' }}>
-                <Card size="small" variant="borderless" style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+                <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
-                    <CloudSyncOutlined style={{ fontSize: '20px', color: '#1677ff' }} />
+                    <CloudSyncOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
                     <Text>跨平台同步，随时随地访问</Text>
                   </Space>
                 </Card>
-                <Card size="small" variant="borderless" style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+                <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
-                    <SearchOutlined style={{ fontSize: '20px', color: '#1677ff' }} />
+                    <SearchOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
                     <Text>AI 驱动的智能搜索，快速定位文件</Text>
                   </Space>
                 </Card>
-                <Card size="small" variant="borderless" style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+                <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
-                    <ShareAltOutlined style={{ fontSize: '20px', color: '#1677ff' }} />
+                    <ShareAltOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
                     <Text>灵活的分享与协作，提升团队效率</Text>
                   </Space>
                 </Card>
-                <Card size="small" variant="borderless" style={{ backgroundColor: 'rgba(255,255,255,0.6)' }}>
+                <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
-                    <ApartmentOutlined style={{ fontSize: '20px', color: '#1677ff' }} />
+                    <ApartmentOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
                     <Text>强大的自动化工作流，简化繁琐任务</Text>
                   </Space>
                 </Card>

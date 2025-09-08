@@ -177,7 +177,7 @@ export const ImageViewerApp: React.FC<AppComponentProps> = ({ filePath, entry, o
   if (err) {
     return (
       <div style={{
-        color: '#f5222d',
+        color: 'var(--ant-color-error, #f5222d)',
         padding: 16,
         background: 'rgba(20,20,20,0.8)',
         backdropFilter: 'blur(24px)'

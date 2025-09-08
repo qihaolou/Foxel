@@ -1,0 +1,40 @@
+.fx-settings-tabs .ant-tabs-nav-list {
+  padding: 8px 4px;
+}
+
+.fx-settings-tabs .ant-tabs-tab {
+  margin: 4px 0 !important;
+  border-radius: 8px;
+  padding: 6px 10px !important;
+}
+
+.fx-settings-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+  color: var(--ant-color-text-secondary) !important;
+}
+
+.fx-settings-tabs .ant-tabs-tab:hover {
+  background: var(--ant-color-fill-tertiary) !important;
+}
+
+/* 选中态：按主题细分 */
+html[data-theme='dark'] .fx-settings-tabs .ant-tabs-tab-active {
+  background: var(--ant-color-primary-bg) !important;
+}
+html[data-theme='dark'] .fx-settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
+html[data-theme='dark'] .fx-settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn .anticon {
+  color: var(--ant-color-text) !important;
+  font-weight: 600;
+}
+
+html[data-theme='light'] .fx-settings-tabs .ant-tabs-tab-active {
+  background: var(--ant-color-primary) !important;
+}
+html[data-theme='light'] .fx-settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn,
+html[data-theme='light'] .fx-settings-tabs .ant-tabs-tab-active .ant-tabs-tab-btn .anticon {
+  color: var(--ant-color-text-light-solid) !important;
+  font-weight: 600;
+}
+
+.fx-settings-tabs .ant-tabs-ink-bar {
+  background: var(--ant-color-primary) !important;
+}

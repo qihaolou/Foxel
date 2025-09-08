@@ -17,11 +17,25 @@ import {
   FontSizeOutlined,
 } from '@ant-design/icons';
 
-export const getFileIcon = (fileName: string, size: number = 16) => {
+const lightenColor = (hex: string, amount: number) => {
+  const s = hex.replace('#', '');
+  const n = s.length === 3 ? s.split('').map(c => c + c).join('') : s;
+  const num = parseInt(n, 16);
+  if (Number.isNaN(num) || n.length !== 6) return hex;
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  const mix = (c: number) => Math.round(c + (255 - c) * amount);
+  const toHex = (v: number) => v.toString(16).padStart(2, '0');
+  return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
+};
+
+export const getFileIcon = (fileName: string, size: number = 16, resolvedMode: 'light' | 'dark' | 'system' = 'light') => {
   const ext = fileName.split('.').pop()?.toLowerCase() || '';
   const iconStyle: React.CSSProperties = { fontSize: size, marginRight: size === 16 ? 6 : 0 };
 
-  const make = (node: React.ReactNode, color: string) => React.cloneElement(node as any, { style: { ...iconStyle, color } });
+  const adj = (color: string) => (resolvedMode === 'dark' ? lightenColor(color, 0.3) : color);
+  const make = (node: React.ReactNode, color: string) => React.cloneElement(node as any, { style: { ...iconStyle, color: adj(color) } });
 
   if (['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp', 'ico', 'tiff'].includes(ext)) return make(<FileImageOutlined />, '#52c41a');
   if (['mp4', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'webm', 'm4v', '3gp'].includes(ext)) return make(<VideoCameraOutlined />, '#fa541c');

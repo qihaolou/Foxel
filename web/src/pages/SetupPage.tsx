@@ -190,7 +190,7 @@ const SetupPage = () => {
       height: '100vh',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(to right, #f0f2f5, #d7d7d7)'
+      background: 'linear-gradient(to right, var(--ant-color-bg-layout, #f0f2f5), var(--ant-color-fill-secondary, #d7d7d7))'
     }}>
       <Card style={{ width: 'clamp(400px, 40vw, 600px)', padding: '24px 16px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>

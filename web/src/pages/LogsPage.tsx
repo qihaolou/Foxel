@@ -143,7 +143,7 @@ const LogsPage = memo(function LogsPage() {
         width={800}
       >
         {selectedLog && (
-          <pre style={{ maxHeight: '60vh', overflow: 'auto', background: '#f5f5f5', padding: 12 }}>
+          <pre style={{ maxHeight: '60vh', overflow: 'auto', background: 'var(--ant-color-fill-tertiary, #f5f5f5)', padding: 12 }}>
             {JSON.stringify(selectedLog.details, null, 2)}
           </pre>
         )}

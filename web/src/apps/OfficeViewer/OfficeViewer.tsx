@@ -60,7 +60,7 @@ export const OfficeViewerApp: React.FC<AppComponentProps> = ({ filePath, onReque
   }
 
   return (
-    <div style={{ width: '100%', height: '100%', background: '#fff' }}>
+    <div style={{ width: '100%', height: '100%', background: 'var(--ant-color-bg-container, #fff)' }}>
       {url ? (
         <iframe
           src={url}

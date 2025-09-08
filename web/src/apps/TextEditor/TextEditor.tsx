@@ -64,19 +64,19 @@ export const TextEditorApp: React.FC<AppComponentProps> = ({ filePath, entry, on
   }, [handleSave]);
 
   return (
-    <Layout style={{ height: '100%', background: '#ffffff' }}>
+    <Layout style={{ height: '100%', background: 'var(--ant-color-bg-container, #ffffff)' }}>
       <Header
         style={{
-          background: '#f0f2f5',
+          background: 'var(--ant-color-bg-layout, #f0f2f5)',
           padding: '0 16px',
           height: 40,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          borderBottom: '1px solid #d9d9d9'
+          borderBottom: '1px solid var(--ant-color-border-secondary, #d9d9d9)'
         }}
       >
-        <span style={{ color: 'rgba(0, 0, 0, 0.88)' }}>
+        <span style={{ color: 'var(--ant-color-text, rgba(0,0,0,0.88))' }}>
           {entry.name} {isDirty && '*'}
         </span>
         <Space>

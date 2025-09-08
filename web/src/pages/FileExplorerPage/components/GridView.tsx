@@ -4,6 +4,7 @@ import { FolderFilled, PictureOutlined } from '@ant-design/icons';
 import type { VfsEntry } from '../../../api/client';
 import { getFileIcon } from './FileIcons';
 import { EmptyState } from './EmptyState';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 interface Props {
   entries: VfsEntry[];
@@ -26,6 +27,28 @@ const formatSize = (size: number) => {
 
 export const GridView: React.FC<Props> = ({ entries, thumbs, selectedEntries, loading, path, onSelect, onSelectRange, onOpen, onContextMenu }) => {
   const { token } = theme.useToken();
+  const { resolvedMode } = useTheme();
+  const lightenColor = (hex: string, amount: number) => {
+    const parseHex = (h: string) => {
+      const s = h.replace('#', '');
+      const n = s.length === 3 ? s.split('').map(c => c + c).join('') : s;
+      const num = parseInt(n, 16);
+      if (Number.isNaN(num) || n.length !== 6) return null;
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255,
+      };
+    };
+    const rgb = parseHex(hex);
+    if (!rgb) return hex;
+    const mix = (c: number) => Math.round(c + (255 - c) * amount);
+    const r = mix(rgb.r);
+    const g = mix(rgb.g);
+    const b = mix(rgb.b);
+    const toHex = (v: number) => v.toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+  };
   const containerRef = useRef<HTMLDivElement | null>(null);
   const itemRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const startRef = useRef<{ x: number, y: number } | null>(null);
@@ -111,9 +134,24 @@ export const GridView: React.FC<Props> = ({ entries, thumbs, selectedEntries, lo
             onContextMenu={(e) => onContextMenu(e, ent)}
             style={{ userSelect: 'none' }}
           >
-            <div className="thumb" style={{ background: ent.is_dir ? 'linear-gradient(#fafafa,#f2f2f2)' : '#fff' }}>
-              {ent.is_dir && <FolderFilled style={{ fontSize: 32, color: token.colorPrimary }} />}
-              {!ent.is_dir && (isImg ? <img src={isImg} alt={ent.name} style={{ maxWidth: '100%', maxHeight: '100%' }} /> : isPictureType ? <PictureOutlined style={{ fontSize: 32, color: '#8c8c8c' }} /> : getFileIcon(ent.name, 32))}
+            <div className="thumb" style={{ background: 'var(--ant-color-bg-container, #fff)' }}>
+              {ent.is_dir && (
+                <FolderFilled
+                  style={{
+                    fontSize: 32,
+                    color: resolvedMode === 'dark' ? lightenColor(String(token.colorPrimary || '#111111'), 0.72) : token.colorPrimary,
+                  }}
+                />
+              )}
+              {!ent.is_dir && (
+                isImg ? (
+                  <img src={isImg} alt={ent.name} style={{ maxWidth: '100%', maxHeight: '100%' }} />
+                ) : isPictureType ? (
+                  <PictureOutlined style={{ fontSize: 32, color: resolvedMode === 'dark' ? lightenColor(String(token.colorPrimary || '#111111'), 0.72) : 'var(--ant-color-text-tertiary, #8c8c8c)' }} />
+                ) : (
+                  getFileIcon(ent.name, 32, resolvedMode)
+                )
+              )}
               {ent.type === 'mount' && <span className="badge">M</span>}
             </div>
             <Tooltip title={ent.name}><div className="name ellipsis" style={{ userSelect: 'none' }}>{ent.name}</div></Tooltip>
@@ -129,8 +167,8 @@ export const GridView: React.FC<Props> = ({ entries, thumbs, selectedEntries, lo
             top: rect.top,
             width: rect.width,
             height: rect.height,
-            border: '1px dashed rgba(0,0,0,0.4)',
-            background: 'rgba(0, 120, 212, 0.08)',
+            border: '1px dashed var(--ant-color-border, rgba(0,0,0,0.4))',
+            background: 'var(--ant-color-primary-bg, rgba(0, 120, 212, 0.08))',
             zIndex: 999
           }}
         />

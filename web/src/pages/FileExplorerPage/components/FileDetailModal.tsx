@@ -35,7 +35,7 @@ function renderExif(exif: Record<string, any>) {
 
   if (items.length === 0) {
     return (
-      <div style={{ textAlign: 'center', padding: 24, color: '#999' }}>
+      <div style={{ textAlign: 'center', padding: 24, color: 'var(--ant-color-text-tertiary, #999)' }}>
         <InfoCircleOutlined style={{ fontSize: 20, marginBottom: 8 }} />
         <div>无常见EXIF信息</div>
       </div>
@@ -49,11 +49,11 @@ function renderExif(exif: Record<string, any>) {
       bordered
       items={items.map(item => ({
         key: item.key,
-        label: <span style={{ fontWeight: 500, color: '#595959' }}>{item.label}</span>,
-        children: <span style={{ color: '#262626' }}>{item.value}</span>
+        label: <span style={{ fontWeight: 500, color: 'var(--ant-color-text-secondary, #595959)' }}>{item.label}</span>,
+        children: <span style={{ color: 'var(--ant-color-text, #262626)' }}>{item.value}</span>
       }))}
       contentStyle={{ padding: '8px 12px' }}
-      labelStyle={{ padding: '8px 12px', backgroundColor: '#fafafa', width: '30%' }}
+      labelStyle={{ padding: '8px 12px', backgroundColor: 'var(--ant-color-fill-tertiary, #fafafa)', width: '30%' }}
     />
   );
 }

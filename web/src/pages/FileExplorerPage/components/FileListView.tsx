@@ -4,6 +4,7 @@ import { FolderFilled, MoreOutlined, EditOutlined, DeleteOutlined, AppstoreOutli
 import type { VfsEntry } from '../../../api/client';
 import { getFileIcon } from './FileIcons';
 import { getAppsForEntry, getDefaultAppForEntry } from '../../../apps/registry';
+import { useTheme } from '../../../contexts/ThemeContext';
 
 interface FileListViewProps {
   entries: VfsEntry[];
@@ -31,6 +32,19 @@ export const FileListView: React.FC<FileListViewProps> = ({
   onContextMenu,
 }) => {
   const { token } = theme.useToken();
+  const { resolvedMode } = useTheme();
+  const lightenColor = (hex: string, amount: number) => {
+    const s = hex.replace('#', '');
+    const n = s.length === 3 ? s.split('').map(c => c + c).join('') : s;
+    const num = parseInt(n, 16);
+    if (Number.isNaN(num) || n.length !== 6) return hex;
+    const r = (num >> 16) & 255;
+    const g = (num >> 8) & 255;
+    const b = num & 255;
+    const mix = (c: number) => Math.round(c + (255 - c) * amount);
+    const toHex = (v: number) => v.toString(16).padStart(2, '0');
+    return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
+  };
 
   const columns = [
     {
@@ -40,9 +54,9 @@ export const FileListView: React.FC<FileListViewProps> = ({
       render: (_: any, r: VfsEntry) => (
         <span style={{ cursor: 'pointer', userSelect: 'none' }} onDoubleClick={() => onOpen(r)}>
           {r.is_dir ? (
-            <FolderFilled style={{ color: token.colorPrimary, marginRight: 6 }} />
+            <FolderFilled style={{ color: resolvedMode === 'dark' ? lightenColor(String(token.colorPrimary || '#111111'), 0.72) : token.colorPrimary, marginRight: 6 }} />
           ) : (
-            getFileIcon(r.name, 16)
+            getFileIcon(r.name, 16, resolvedMode)
           )}
           {r.name}
           {r.type === 'mount' && <Tooltip title="挂载点"><span style={{ marginLeft: 6, fontSize: 10, padding: '0 4px', border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}>MOUNT</span></Tooltip>}
