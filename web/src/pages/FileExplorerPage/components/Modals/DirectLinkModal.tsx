@@ -44,7 +44,12 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
     try {
       const fullPath = (path === '/' ? '' : path) + '/' + entry.name;
       const res = await vfsApi.getTempLinkToken(fullPath, expiresIn);
-      setLink(res.url);
+      let url = res.url;
+      if (url && !url.startsWith('http://') && !url.startsWith('https://')) {
+        const origin = window.location.origin;
+        url = url.startsWith('/') ? origin + url : origin + '/' + url;
+      }
+      setLink(url);
     } catch (e: any) {
       message.error(e.message || '生成链接失败');
     } finally {
@@ -63,7 +68,7 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
     navigator.clipboard.writeText(markdownText);
     message.success('Markdown 格式已复制到剪贴板');
   };
-  
+
   const handleExpiresChange = (e: any) => {
     setExpiresIn(e.target.value);
   };
@@ -88,7 +93,7 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
         <Radio.Button value={604800}>7 天</Radio.Button>
         <Radio.Button value={0}>永久</Radio.Button>
       </Radio.Group>
-      
+
       <div style={{ display: 'flex', gap: 8 }}>
         <Input readOnly value={link} disabled={loading} placeholder={loading ? "正在生成链接..." : "链接将显示在这里"} />
         <Space.Compact>
