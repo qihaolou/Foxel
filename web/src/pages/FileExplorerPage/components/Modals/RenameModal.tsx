@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input } from 'antd';
+import { useI18n } from '../../../../i18n';
 import type { VfsEntry } from '../../../../api/client';
 
 interface RenameModalProps {
@@ -10,6 +11,7 @@ interface RenameModalProps {
 
 export const RenameModal: React.FC<RenameModalProps> = ({ entry, onOk, onCancel }) => {
   const [name, setName] = useState('');
+  const { t } = useI18n();
 
   useEffect(() => {
     if (entry) {
@@ -25,7 +27,7 @@ export const RenameModal: React.FC<RenameModalProps> = ({ entry, onOk, onCancel 
 
   return (
     <Modal
-      title="重命名"
+      title={t('Rename')}
       open={!!entry}
       onOk={handleOk}
       onCancel={onCancel}
@@ -33,7 +35,7 @@ export const RenameModal: React.FC<RenameModalProps> = ({ entry, onOk, onCancel 
       destroyOnClose
     >
       <Input
-        placeholder="新的名称"
+        placeholder={t('New Name')}
         value={name}
         onChange={e => setName(e.target.value)}
         onPressEnter={handleOk}

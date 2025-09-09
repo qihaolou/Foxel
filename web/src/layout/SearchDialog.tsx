@@ -2,6 +2,7 @@ import { Modal, Input, List, Divider, Spin, Select, Space } from 'antd';
 import { SearchOutlined, FileTextOutlined } from '@ant-design/icons';
 import React, { useState } from 'react';
 import { vfsApi, type SearchResultItem } from '../api/vfs';
+import { useI18n } from '../i18n';
 import { useNavigate } from 'react-router';
 
 
@@ -10,9 +11,9 @@ interface SearchDialogProps {
   onClose: () => void;
 }
 
-const SEARCH_MODES = [
-  { label: '智能搜索', value: 'vector' },
-  { label: '名称搜索', value: 'filename' },
+const SEARCH_MODES = (t: (k: string)=>string) => [
+  { label: t('Smart Search'), value: 'vector' },
+  { label: t('Name Search'), value: 'filename' },
 ];
 
 const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose }) => {
@@ -21,6 +22,7 @@ const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose }) => {
   const [results, setResults] = useState<SearchResultItem[]>([]);
   const [searched, setSearched] = useState(false);
   const [searchMode, setSearchMode] = useState<'vector' | 'filename'>('vector');
+  const { t } = useI18n();
   const navigate = useNavigate();
 
   const handleSearch = async () => {
@@ -48,7 +50,7 @@ const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose }) => {
     >
       <Space.Compact style={{ marginBottom: 0, width: '100%' }}>
         <Select
-          options={SEARCH_MODES}
+          options={SEARCH_MODES(t)}
           value={searchMode}
           onChange={v => setSearchMode(v as 'vector' | 'filename')}
           style={{
@@ -67,7 +69,7 @@ const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose }) => {
         <Input
           allowClear
           prefix={<SearchOutlined />}
-          placeholder="搜索文件 / 标签 / 类型"
+          placeholder={t('Search files / tags / types')}
           value={search}
           onChange={e => setSearch(e.target.value)}
           style={{
@@ -84,14 +86,14 @@ const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose }) => {
       </Space.Compact>
       {searched && (
         <>
-          <Divider style={{ margin: '12px 0' }}>搜索结果</Divider>
+          <Divider style={{ margin: '12px 0' }}>{t('Search Results')}</Divider>
           {loading ? (
             <Spin />
           ) : (
             <List
               itemLayout="horizontal"
               dataSource={results}
-              locale={{ emptyText: '未找到相关文件' }}
+              locale={{ emptyText: t('No files found') }}
               renderItem={item => {
                 const fullPath = item.path || '';
                 const trimmed = fullPath.replace(/\/+$/, '');
@@ -112,7 +114,7 @@ const SearchDialog: React.FC<SearchDialogProps> = ({ open, onClose }) => {
                           {fullPath}
                         </a>
                       }
-                      description={`相关度: ${item.score.toFixed(2)}`}
+                      description={`${t('Relevance')}: ${item.score.toFixed(2)}`}
                     />
                   </List.Item>
                 );

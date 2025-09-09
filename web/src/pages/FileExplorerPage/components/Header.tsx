@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Flex, Typography, Divider, Button, Space, Tooltip, Segmented, Breadcrumb, Input, theme } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined, ReloadOutlined, PlusOutlined, UploadOutlined, AppstoreOutlined, UnorderedListOutlined } from '@ant-design/icons';
 import { Select } from 'antd';
+import { useI18n } from '../../../i18n';
 import type { ViewMode } from '../types';
 
 interface HeaderProps {
@@ -35,6 +36,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSortChange,
 }) => {
   const { token } = theme.useToken();
+  const { t } = useI18n();
   const [editingPath, setEditingPath] = useState(false);
   const [pathInputValue, setPathInputValue] = useState('');
 
@@ -73,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
     }
 
     const breadcrumbItems = [
-      { key: 'root', title: <span style={{ cursor: 'pointer' }} onClick={() => onNavigate('/')}>Home</span> },
+      { key: 'root', title: <span style={{ cursor: 'pointer' }} onClick={() => onNavigate('/')}>{t('Home')}</span> },
       ...path.split('/').filter(Boolean).map((segment, index, arr) => {
         const segmentPath = '/' + arr.slice(0, index + 1).join('/');
         return {
@@ -99,23 +101,23 @@ export const Header: React.FC<HeaderProps> = ({
     <Flex align="center" justify="space-between" style={{ padding: '10px 16px', borderBottom: `1px solid ${token.colorBorderSecondary}`, gap: 12 }}>
       <Flex align="center" gap={8} style={{ flexWrap: 'wrap', flex: 1, overflow: 'hidden' }}>
         <Button size="small" icon={<ArrowUpOutlined />} onClick={onGoUp} disabled={path === '/'} />
-        <Typography.Text strong>文件管理</Typography.Text>
+        <Typography.Text strong>{t('File Manager')}</Typography.Text>
         <Divider type="vertical" />
         {renderBreadcrumb()}
       </Flex>
       <Space size={8} wrap>
-        <Button size="small" icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>刷新</Button>
-        <Button size="small" icon={<PlusOutlined />} onClick={onCreateDir}>新建目录</Button>
-        <Button size="small" icon={<UploadOutlined />} onClick={onUpload}>上传</Button>
+        <Button size="small" icon={<ReloadOutlined />} onClick={onRefresh} loading={loading}>{t('Refresh')}</Button>
+        <Button size="small" icon={<PlusOutlined />} onClick={onCreateDir}>{t('New Folder')}</Button>
+        <Button size="small" icon={<UploadOutlined />} onClick={onUpload}>{t('Upload')}</Button>
         <Select
           size="small"
           value={sortBy}
           onChange={(val) => onSortChange(val, sortOrder)}
           style={{ width: 80 }}
           options={[
-            { value: 'name', label: '名称' },
-            { value: 'size', label: '大小' },
-            { value: 'mtime', label: '修改时间' },
+            { value: 'name', label: t('Name') },
+            { value: 'size', label: t('Size') },
+            { value: 'mtime', label: t('Modified Time') },
           ]}
         />
         <Button
@@ -128,8 +130,8 @@ export const Header: React.FC<HeaderProps> = ({
           value={viewMode}
           onChange={v => onSetViewMode(v as any)}
           options={[
-            { label: <Tooltip title="网格"><AppstoreOutlined /></Tooltip>, value: 'grid' },
-            { label: <Tooltip title="列表"><UnorderedListOutlined /></Tooltip>, value: 'list' }
+            { label: <Tooltip title={t('Grid')}><AppstoreOutlined /></Tooltip>, value: 'grid' },
+            { label: <Tooltip title={t('List')}><UnorderedListOutlined /></Tooltip>, value: 'list' }
           ]}
         />
       </Space>

@@ -1,5 +1,8 @@
 import { Empty } from 'antd';
 
+import { useI18n } from '../i18n';
+
 export default function OfflineDownloadPage() {
-  return <Empty description="暂无离线下载任务" />;
+  const { t } = useI18n();
+  return <Empty description={t('No offline download tasks')} />;
 }

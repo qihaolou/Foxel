@@ -3,6 +3,8 @@ import { Form, Input, Button, Card, message, Steps, Select, Space, Typography } 
 import { UserOutlined, LockOutlined, HddOutlined } from '@ant-design/icons';
 import { adaptersApi } from '../api/adapters';
 import { useAuth } from '../contexts/AuthContext';
+import { useI18n } from '../i18n';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const { Title, Text } = Typography;
 const { Step } = Steps;
@@ -12,12 +14,13 @@ const SetupPage = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [form] = Form.useForm();
   const { login, register } = useAuth();
+  const { t } = useI18n();
   const onFinish = async (values: any) => {
     setLoading(true);
     try {
       await register(values.username, values.password, values.email, values.full_name);
       await login(values.username, values.password);
-        message.success('初始化成功！正在为您登录，请不要刷新。');
+        message.success(t('Initialization succeeded! Logging you in...'));
       setTimeout(async () => {
         await adaptersApi.create({
           name: values.adapter_name,
@@ -33,7 +36,7 @@ const SetupPage = () => {
       }, 2000);
     } catch (error: any) {
       console.log(error)
-      message.error(error.response?.data?.msg || '初始化失败，请稍后重试');
+      message.error(error.response?.data?.msg || t('Initialization failed, please try later'));
     } finally {
       setLoading(false);
     }
@@ -57,13 +60,13 @@ const SetupPage = () => {
 
   const steps = [
     {
-      title: '数据库设置',
+      title: t('Database Setup'),
       content: (
         <>
-          <Title level={4}>选择数据库驱动</Title>
-          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>选择用于存储系统数据的数据库和向量数据库。</Text>
+          <Title level={4}>{t('Choose database driver')}</Title>
+          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>{t('Select database and vector database for system data')}</Text>
           <Form.Item
-            label="数据库驱动"
+            label={t('Database Driver')}
             name="db_driver"
             initialValue="sqlite"
             rules={[{ required: true }]}
@@ -71,7 +74,7 @@ const SetupPage = () => {
             <Select size="large" prefix={<HddOutlined />} disabled options={[{ label: 'SQLite', value: 'sqlite' }]} />
           </Form.Item>
           <Form.Item
-            label="向量数据库驱动"
+            label={t('Vector DB Driver')}
             name="vector_db_driver"
             initialValue="milvus"
             rules={[{ required: true }]}
@@ -82,96 +85,96 @@ const SetupPage = () => {
       )
     },
     {
-      title: '初始化挂载',
+      title: t('Initialize Mount'),
       content: (
         <>
-          <Title level={4}>配置初始存储</Title>
-          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>为您的文件创建第一个存储挂载点。</Text>
+          <Title level={4}>{t('Configure initial storage')}</Title>
+          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>{t('Create the first storage mount for your files')}</Text>
           <Form.Item
-            label="挂载名称"
+            label={t('Mount Name')}
             name="adapter_name"
-            initialValue="本地存储"
-            rules={[{ required: true, message: '请输入挂载名称！' }]}
+            initialValue={t('Local Storage')}
+            rules={[{ required: true, message: t('Please input mount name!') }]}
           >
             <Input size="large" prefix={<HddOutlined />} />
           </Form.Item>
           <Form.Item
-            label="存储类型"
+            label={t('Storage Type')}
             name="adapter_type"
             initialValue="local"
             rules={[{ required: true }]}
           >
-            <Select size="large" disabled options={[{ label: '本地存储', value: 'local' }]} />
+            <Select size="large" disabled options={[{ label: t('Local Storage'), value: 'local' }]} />
           </Form.Item>
           <Form.Item
-            label="挂载路径"
+            label={t('Mount Path')}
             name="path"
             initialValue="/local"
-            rules={[{ required: true, message: '请输入挂载路径！' }]}
+            rules={[{ required: true, message: t('Please input mount path!') }]}
           >
             <Input size="large" prefix={<HddOutlined />} />
           </Form.Item>
           <Form.Item
-            label="根目录"
+            label={t('Root Directory')}
             name="root_dir"
             initialValue="data/mount"
-            rules={[{ required: true, message: '请输入根目录！' }]}
+            rules={[{ required: true, message: t('Please input root directory!') }]}
           >
-            <Input size="large" placeholder="例如: data/ 或 /var/foxel/data" />
+            <Input size="large" placeholder={t('e.g., data/ or /var/foxel/data')} />
           </Form.Item>
         </>
       )
     },
     {
-      title: '创建管理员',
+      title: t('Create Admin'),
       content: (
         <>
-          <Title level={4}>创建管理员账户</Title>
-          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>这是系统的第一个账户，将拥有最高权限。</Text>
+          <Title level={4}>{t('Create admin account')}</Title>
+          <Text type="secondary" style={{ marginBottom: 24, display: 'block' }}>{t('This is the first account with full permissions')}</Text>
           <Form.Item
-            label="用户名"
+            label={t('Username')}
             name="username"
-            rules={[{ required: true, message: '请输入用户名！' }]}
+            rules={[{ required: true, message: t('Please input username!') }]}
           >
             <Input size="large" prefix={<UserOutlined />} />
           </Form.Item>
 
           <Form.Item
-            label="昵称"
+            label={t('Full Name')}
             name="full_name"
           >
             <Input size="large" prefix={<UserOutlined />} />
           </Form.Item>
 
           <Form.Item
-            label="邮箱"
+            label={t('Email')}
             name="email"
-            rules={[{ type: 'email', message: '请输入有效的邮箱地址！' }]}
+            rules={[{ type: 'email', message: t('Please input a valid email!') }]}
           >
             <Input size="large" prefix={<UserOutlined />} />
           </Form.Item>
 
           <Form.Item
-            label="密码"
+            label={t('Password')}
             name="password"
-            rules={[{ required: true, message: '请输入密码！' }]}
+            rules={[{ required: true, message: t('Please enter password') }]}
           >
             <Input.Password size="large" prefix={<LockOutlined />} />
           </Form.Item>
 
           <Form.Item
-            label="确认密码"
+            label={t('Confirm Password')}
             name="confirm"
             dependencies={['password']}
             hasFeedback
             rules={[
-              { required: true, message: '请确认您的密码！' },
+              { required: true, message: t('Please confirm your password!') },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('两次输入的密码不一致！'));
+                  return Promise.reject(new Error(t('Passwords do not match!')));
                 },
               }),
             ]}
@@ -192,10 +195,13 @@ const SetupPage = () => {
       justifyContent: 'center',
       background: 'linear-gradient(to right, var(--ant-color-bg-layout, #f0f2f5), var(--ant-color-fill-secondary, #d7d7d7))'
     }}>
+      <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 1000 }}>
+        <LanguageSwitcher />
+      </div>
       <Card style={{ width: 'clamp(400px, 40vw, 600px)', padding: '24px 16px' }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <img src="/logo.svg" alt="Foxel Logo" style={{ width: 48, marginBottom: 16 }} />
-          <Title level={2}>系统初始化</Title>
+          <Title level={2}>{t('System Initialization')}</Title>
         </div>
         <Steps current={currentStep} style={{ marginBottom: 32 }}>
           {steps.map(item => (
@@ -215,17 +221,17 @@ const SetupPage = () => {
           <Space>
             {currentStep > 0 && (
               <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
-                上一步
+                {t('Previous')}
               </Button>
             )}
             {currentStep < steps.length - 1 && (
               <Button type="primary" onClick={() => next()}>
-                下一步
+                {t('Next')}
               </Button>
             )}
             {currentStep === steps.length - 1 && (
               <Button type="primary" htmlType="submit" loading={loading} onClick={() => form.submit()}>
-                完成初始化
+                {t('Finish Initialization')}
               </Button>
             )}
           </Space>

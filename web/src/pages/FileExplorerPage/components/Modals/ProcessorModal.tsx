@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Form, Select, Input, Checkbox } from 'antd';
+import { useI18n } from '../../../../i18n';
 import type { VfsEntry } from '../../../../api/client';
 import type { ProcessorTypeMeta } from '../../../../api/processors';
 import { ProcessorConfigForm } from '../../../../components/ProcessorConfigForm';
@@ -28,6 +29,7 @@ export const ProcessorModal: React.FC<ProcessorModalProps> = (props) => {
     onConfigChange, onSavingPathChange, onOverwriteChange
   } = props;
   const [form] = Form.useForm();
+  const { t } = useI18n();
 
   const selectedProcessorMeta = processorTypes.find(pt => pt.type === selectedProcessor);
 
@@ -51,7 +53,7 @@ export const ProcessorModal: React.FC<ProcessorModalProps> = (props) => {
 
   return (
     <Modal
-      title={`使用处理器处理文件${entry ? `: ${entry.name}` : ''}`}
+      title={t('Process file with processor') + (entry ? `: ${entry.name}` : '')}
       open={visible}
       onCancel={onCancel}
       onOk={onOk}
@@ -59,11 +61,11 @@ export const ProcessorModal: React.FC<ProcessorModalProps> = (props) => {
       destroyOnClose
     >
       <Form form={form} layout="vertical" onValuesChange={handleFormValuesChange}>
-        <Form.Item name="processor_type" label="处理器" required>
+        <Form.Item name="processor_type" label={t('Processor')} required>
           <Select
             onChange={onSelectedProcessorChange}
             options={processorTypes.map(pt => ({ value: pt.type, label: pt.name }))}
-            placeholder="请选择处理器"
+            placeholder={t('Select a processor')}
           />
         </Form.Item>
         <ProcessorConfigForm
@@ -75,15 +77,15 @@ export const ProcessorModal: React.FC<ProcessorModalProps> = (props) => {
           <>
             <Form.Item>
               <Checkbox checked={overwrite} onChange={e => onOverwriteChange(e.target.checked)}>
-                覆盖原文件
+                {t('Overwrite original file')}
               </Checkbox>
             </Form.Item>
             {!overwrite && (
-              <Form.Item label="保存为新文件">
+              <Form.Item label={t('Save as new file')}>
                 <Input
                   value={savingPath}
                   onChange={e => onSavingPathChange(e.target.value)}
-                  placeholder="如 /newfile.jpg，不填则仅返回处理结果"
+                  placeholder={t('e.g. /newfile.jpg, leave blank to only return result')}
                 />
               </Form.Item>
             )}

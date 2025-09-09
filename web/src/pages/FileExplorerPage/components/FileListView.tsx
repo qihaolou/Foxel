@@ -5,6 +5,7 @@ import type { VfsEntry } from '../../../api/client';
 import { getFileIcon } from './FileIcons';
 import { getAppsForEntry, getDefaultAppForEntry } from '../../../apps/registry';
 import { useTheme } from '../../../contexts/ThemeContext';
+import { useI18n } from '../../../i18n';
 
 interface FileListViewProps {
   entries: VfsEntry[];
@@ -33,6 +34,7 @@ export const FileListView: React.FC<FileListViewProps> = ({
 }) => {
   const { token } = theme.useToken();
   const { resolvedMode } = useTheme();
+  const { t } = useI18n();
   const lightenColor = (hex: string, amount: number) => {
     const s = hex.replace('#', '');
     const n = s.length === 3 ? s.split('').map(c => c + c).join('') : s;
@@ -48,7 +50,7 @@ export const FileListView: React.FC<FileListViewProps> = ({
 
   const columns = [
     {
-      title: '名称',
+      title: t('Name'),
       dataIndex: 'name',
       key: 'name',
       render: (_: any, r: VfsEntry) => (
@@ -59,14 +61,14 @@ export const FileListView: React.FC<FileListViewProps> = ({
             getFileIcon(r.name, 16, resolvedMode)
           )}
           {r.name}
-          {r.type === 'mount' && <Tooltip title="挂载点"><span style={{ marginLeft: 6, fontSize: 10, padding: '0 4px', border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}>MOUNT</span></Tooltip>}
+          {r.type === 'mount' && <Tooltip title={t('Mount Point')}><span style={{ marginLeft: 6, fontSize: 10, padding: '0 4px', border: `1px solid ${token.colorBorderSecondary}`, borderRadius: 4 }}>MOUNT</span></Tooltip>}
         </span>
       )
     },
-    { title: '大小', dataIndex: 'size', width: 100, render: (v: number, r: VfsEntry) => r.is_dir ? '-' : v },
-    { title: '修改时间', dataIndex: 'mtime', width: 160, render: (v: number) => v ? new Date(v * 1000).toLocaleString() : '-' },
+    { title: t('Size'), dataIndex: 'size', width: 100, render: (v: number, r: VfsEntry) => r.is_dir ? '-' : v },
+    { title: t('Modified Time'), dataIndex: 'mtime', width: 160, render: (v: number) => v ? new Date(v * 1000).toLocaleString() : '-' },
     {
-      title: '操作',
+      title: t('Actions'),
       key: 'actions',
       width: 110,
       render: (_: any, r: VfsEntry) => {
@@ -76,19 +78,19 @@ export const FileListView: React.FC<FileListViewProps> = ({
           <Dropdown
             menu={{
               items: [
-                (r.is_dir || apps.length > 0) ? { key: 'open', label: defaultApp ? `打开(${defaultApp.name})` : '打开', icon: <FolderOpenOutlined />, onClick: () => onOpen(r) } : null,
+                (r.is_dir || apps.length > 0) ? { key: 'open', label: defaultApp ? `${t('Open')}(${defaultApp.name})` : t('Open'), icon: <FolderOpenOutlined />, onClick: () => onOpen(r) } : null,
                 !r.is_dir && apps.length > 0 ? {
                   key: 'openWith',
-                  label: '打开方式',
+                  label: t('Open With'),
                   icon: <AppstoreOutlined />,
                   children: apps.map(a => ({
                     key: 'openWith-' + a.key,
-                    label: a.name + (a.key === defaultApp?.key ? ' (默认)' : ''),
+                    label: a.name + (a.key === defaultApp?.key ? ` (${t('Default')})` : ''),
                     onClick: () => onOpenWith(r, a.key)
                   }))
                 } : null,
-                { key: 'rename', label: '重命名', icon: <EditOutlined />, disabled: r.type === 'mount', onClick: () => onRename(r) },
-                { key: 'delete', label: '删除', icon: <DeleteOutlined />, danger: true, disabled: r.type === 'mount', onClick: () => onDelete(r) }
+                { key: 'rename', label: t('Rename'), icon: <EditOutlined />, disabled: r.type === 'mount', onClick: () => onRename(r) },
+                { key: 'delete', label: t('Delete'), icon: <DeleteOutlined />, danger: true, disabled: r.type === 'mount', onClick: () => onDelete(r) }
               ].filter(Boolean) as any[]
             }}
           >

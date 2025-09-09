@@ -5,9 +5,11 @@ import { shareApi, type ShareInfo } from '../api/share';
 import { format, parseISO } from 'date-fns';
 import { LinkOutlined, CopyOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useSystemStatus } from '../contexts/SystemContext';
+import { useI18n } from '../i18n';
 
 const SharePage = memo(function SharePage() {
   const systemStatus = useSystemStatus();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<ShareInfo[]>([]);
 
@@ -17,7 +19,7 @@ const SharePage = memo(function SharePage() {
       const list = await shareApi.list();
       setData(list);
     } catch (e: any) {
-      message.error(e.message || '加载失败');
+      message.error(e.message || t('Load failed'));
     } finally {
       setLoading(false);
     }
@@ -29,22 +31,22 @@ const SharePage = memo(function SharePage() {
     const baseUrl = systemStatus?.app_domain || window.location.origin;
     const shareUrl = new URL(`/share/${rec.token}`, baseUrl).href;
     navigator.clipboard.writeText(shareUrl);
-    message.success('链接已复制');
+    message.success(t('Copied link'));
   };
 
   const doDelete = async (rec: ShareInfo) => {
     try {
       await shareApi.remove(rec.id);
-      message.success('分享已取消');
+      message.success(t('Share canceled'));
       fetchList();
     } catch (e: any) {
-      message.error(e.message || '取消失败');
+      message.error(e.message || t('Cancel failed'));
     }
   };
 
   const columns = [
     { 
-      title: '分享名称', 
+      title: t('Share Name'), 
       dataIndex: 'name',
       render: (name: string, rec: ShareInfo) => (
         <a href={`/share/${rec.token}`} target="_blank" rel="noopener noreferrer">
@@ -54,7 +56,7 @@ const SharePage = memo(function SharePage() {
       )
     },
     { 
-      title: '分享内容', 
+      title: t('Share Content'), 
       dataIndex: 'paths',
       ellipsis: true,
       render: (paths: string[]) => (
@@ -64,31 +66,31 @@ const SharePage = memo(function SharePage() {
       )
     },
     { 
-      title: '创建时间', 
+      title: t('Created At'), 
       dataIndex: 'created_at', 
       width: 180,
       render: (v: string) => format(parseISO(v), 'yyyy-MM-dd HH:mm')
     },
     {
-      title: '过期时间',
+      title: t('Expires At'),
       dataIndex: 'expires_at',
       width: 180,
-      render: (v?: string) => v ? <Tag color="orange">{format(parseISO(v), 'yyyy-MM-dd HH:mm')}</Tag> : <Tag>永久有效</Tag>
+      render: (v?: string) => v ? <Tag color="orange">{format(parseISO(v), 'yyyy-MM-dd HH:mm')}</Tag> : <Tag>{t('Forever')}</Tag>
     },
     {
-      title: '访问',
+      title: t('Access'),
       dataIndex: 'access_type',
       width: 100,
-      render: (v: 'public' | 'password') => v === 'password' ? <Tag color="red">密码</Tag> : <Tag color="green">公开</Tag>
+      render: (v: 'public' | 'password') => v === 'password' ? <Tag color="red">{t('By Password')}</Tag> : <Tag color="green">{t('Public')}</Tag>
     },
     {
-      title: '操作',
+      title: '',
       width: 160,
       render: (_: any, rec: ShareInfo) => (
         <Space size="small">
-          <Button size="small" icon={<CopyOutlined />} onClick={() => doCopy(rec)}>复制</Button>
-          <Popconfirm title="确认取消分享?" onConfirm={() => doDelete(rec)}>
-            <Button size="small" danger icon={<DeleteOutlined />}>取消</Button>
+          <Button size="small" icon={<CopyOutlined />} onClick={() => doCopy(rec)}>{t('Copy')}</Button>
+          <Popconfirm title={t('Are you sure to cancel share?')} onConfirm={() => doDelete(rec)}>
+            <Button size="small" danger icon={<DeleteOutlined />}>{t('Cancel')}</Button>
           </Popconfirm>
         </Space>
       )
@@ -97,8 +99,8 @@ const SharePage = memo(function SharePage() {
 
   return (
     <PageCard
-      title="我的分享"
-      extra={<Button onClick={fetchList} loading={loading}>刷新</Button>}
+      title={t('My Shares')}
+      extra={<Button onClick={fetchList} loading={loading}>{t('Refresh')}</Button>}
     >
       <Table
         rowKey="id"

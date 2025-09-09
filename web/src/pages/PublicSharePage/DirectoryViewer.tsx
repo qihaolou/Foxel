@@ -4,6 +4,7 @@ import { FileOutlined, FolderOutlined, DownloadOutlined } from '@ant-design/icon
 import { shareApi, type ShareInfo } from '../../api/share';
 import { type VfsEntry } from '../../api/vfs';
 import { format, parseISO } from 'date-fns';
+import { useI18n } from '../../i18n';
 
 const { Title, Text } = Typography;
 
@@ -19,6 +20,7 @@ export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo,
     const [entries, setEntries] = useState<VfsEntry[]>([]);
     const [currentPath, setCurrentPath] = useState('/');
     const [error, setError] = useState('');
+    const { t } = useI18n();
 
     const loadData = useCallback(async (p: string) => {
         setLoading(true);
@@ -28,7 +30,7 @@ export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo,
             setEntries(listing.entries || []);
             setCurrentPath(p);
         } catch (e: any) {
-            setError(e.message || '加载分享失败');
+            setError(e.message || t('Share load failed'));
         } finally {
             setLoading(false);
         }
@@ -53,7 +55,7 @@ export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo,
 
     const renderBreadcrumb = () => {
         const parts = currentPath.split('/').filter(Boolean);
-        const items = [{ title: '全部文件', path: '/' }];
+        const items = [{ title: t('Root'), path: '/' }];
         parts.forEach((part, i) => {
             const path = '/' + parts.slice(0, i + 1).join('/');
             items.push({ title: part, path });
@@ -82,8 +84,13 @@ export const DirectoryViewer = memo(function DirectoryViewer({ token, shareInfo,
             <Card>
                 <Title level={4}>{shareInfo?.name}</Title>
                 <Text type="secondary">
-                    创建于 {shareInfo && format(parseISO(shareInfo.created_at), 'yyyy-MM-dd')}
-                    {shareInfo?.expires_at && `，将于 ${format(parseISO(shareInfo.expires_at), 'yyyy-MM-dd')} 过期`}
+                    {t('Created on {date}', { date: format(parseISO(shareInfo.created_at), 'yyyy-MM-dd') })}
+                    {shareInfo?.expires_at ? (
+                      <>
+                        {' '}
+                        {t('Expires on {date}', { date: format(parseISO(shareInfo.expires_at), 'yyyy-MM-dd') })}
+                      </>
+                    ) : null}
                 </Text>
                 <div style={{ margin: '16px 0' }}>
                     {renderBreadcrumb()}

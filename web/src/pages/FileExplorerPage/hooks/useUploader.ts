@@ -84,7 +84,7 @@ export function useUploader(path: string, onUploadComplete: () => void) {
         setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: 'success', progress: 100, permanentLink } : f));
       } catch (e: any) {
         setFiles(prev => prev.map(f => f.id === uploadFile.id ? { ...f, status: 'error', error: e.message } : f));
-        message.error(`上传失败: ${uploadFile.file.name} - ${e.message}`);
+        message.error(`Upload failed: ${uploadFile.file.name} - ${e.message}`);
       }
     }
     

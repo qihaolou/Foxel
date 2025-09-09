@@ -16,6 +16,7 @@ import '../styles/sider-menu.css';
 import { getLatestVersion } from '../api/config.ts';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '../contexts/ThemeContext';
+import { useI18n } from '../i18n';
 const { Sider } = Layout;
 
 export interface SideNavProps {
@@ -29,6 +30,7 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
   const status = useSystemStatus();
   const { token } = theme.useToken();
   const { resolvedMode } = useTheme();
+  const { t } = useI18n();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isVersionModalOpen, setIsVersionModalOpen] = useState(false);
   const [latestVersion, setLatestVersion] = useState<{
@@ -122,7 +124,7 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
                     color: token.colorTextTertiary,
                     textTransform: 'uppercase'
                   }}
-                >{group.title}</div>
+                >{t(group.title)}</div>
               )}
               <Menu
                 mode="inline"
@@ -130,7 +132,7 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
                 inlineIndent={12}
                 selectedKeys={[activeKey]}
                 onClick={(e) => onChange(e.key)}
-                items={group.children.map((i: NavItem) => ({ key: i.key, icon: i.icon, label: i.label }))}
+                items={group.children.map((i: NavItem) => ({ key: i.key, icon: i.icon, label: t(i.label) }))}
                 style={{ borderInline: 'none', background: 'transparent' }}
                 className="sider-menu-group foxel-sider-menu"
               />
@@ -162,26 +164,26 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
             cursor: 'pointer'
           }} onClick={showVersionModal}>
             {hasUpdate ? (
-              <Tooltip title={`发现新版本: ${latestVersion?.version}`} placement={collapsed ? 'right' : 'top'}>
+              <Tooltip title={t('New version found: {version}', { version: latestVersion?.version || '' })} placement={collapsed ? 'right' : 'top'}>
                 <a rel="noopener noreferrer"
                   style={{ textDecoration: 'none' }}>
                   {collapsed ? (
                     <Tag icon={<WarningOutlined />} color="warning" style={{ marginInlineEnd: 0 }} />
                   ) : (
                     <Tag icon={<WarningOutlined />} color="warning">
-                      {status?.version} - 有更新 [{latestVersion?.version}]
+                      {status?.version} - {t('Update available')} [{latestVersion?.version}]
                     </Tag>
                   )}
                 </a>
               </Tooltip>
             ) : (
               latestVersion ? (
-                <Tooltip title={`当前为最新版: ${status?.version}`} placement={collapsed ? 'right' : 'top'}>
+                <Tooltip title={t('You are on the latest: {version}', { version: status?.version || '' })} placement={collapsed ? 'right' : 'top'}>
                   {collapsed ? (
                     <Tag icon={<CheckCircleOutlined />} color="success" style={{ marginInlineEnd: 0 }} />
                   ) : (
                     <Tag icon={<CheckCircleOutlined />} color="success">
-                      已是最新版
+                      {t('Up to date')}
                     </Tag>
                   )}
                 </Tooltip>
@@ -221,24 +223,24 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
       <Modal
         open={isModalOpen}
         onCancel={() => setIsModalOpen(false)}
-        title="加入社区"
+        title={t('Join Community')}
         footer={null}
         width={320}
       >
         <div style={{ textAlign: 'center', padding: '12px 0' }}>
           <img src="https://foxel.cc/image/wechat.png" width={200} alt="wechat" />
           <div style={{ marginTop: 12, color: token.colorTextSecondary }}>
-            微信扫码加入交流群
+            {t('Scan to join WeChat group')}
           </div>
           <div style={{ marginTop: 8, fontSize: 12, color: token.colorTextTertiary }}>
-            如二维码失效，请添加 drizzle2001 拉群
+            {t('If QR expires, add drizzle2001 to join')}
           </div>
         </div>
       </Modal>
       <Modal
         open={isVersionModalOpen}
         onCancel={() => setIsVersionModalOpen(false)}
-        title="版本信息"
+        title={t('Version Info')}
         footer={null}
         width={600}
       >
@@ -246,18 +248,18 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
           {latestVersion ? (
             <>
               <Descriptions bordered column={1} size="small">
-                <Descriptions.Item label="当前版本">
+                <Descriptions.Item label={t('Current Version')}>
                   <Tag>{status?.version}</Tag>
                 </Descriptions.Item>
-                <Descriptions.Item label="最新版本">
+                <Descriptions.Item label={t('Latest Version')}>
                   <Tag color={hasUpdate ? 'orange' : 'green'}>{latestVersion.version}</Tag>
                 </Descriptions.Item>
               </Descriptions>
 
               {hasUpdate && (
                 <Alert
-                  message={<span style={{ color: token.colorText }}>{`发现新版本: ${latestVersion.version}`}</span>}
-                  description={<span style={{ color: token.colorTextSecondary }}>建议尽快更新到最新版本，以获得新功能和安全修复。</span>}
+                  message={<span style={{ color: token.colorText }}>{t('New version found: {version}', { version: latestVersion.version })}</span>}
+                  description={<span style={{ color: token.colorTextSecondary }}>{t('Please update to the latest for features and fixes')}</span>}
                   type="info"
                   showIcon
                   style={{ marginTop: 24, marginBottom: 24, background: token.colorInfoBg, borderColor: token.colorInfoBorder }}
@@ -269,13 +271,13 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
                       target="_blank"
                       icon={<GithubOutlined />}
                     >
-                      前往发布页面
+                      {t('Open Releases')}
                     </Button>
                   }
                 />
               )}
 
-              <Divider orientation="left" plain>更新日志</Divider>
+              <Divider orientation="left" plain>{t('Changelog')}</Divider>
               <div style={{
                 maxHeight: '40vh',
                 overflowY: 'auto',
@@ -305,7 +307,7 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
           ) : (
             <div style={{ textAlign: 'center', padding: '40px 0', color: token.colorTextSecondary }}>
               <Spin size="large" />
-              <p style={{ marginTop: 16 }}>正在获取最新版本信息...</p>
+              <p style={{ marginTop: 16 }}>{t('Fetching latest version...')}</p>
             </div>
           )}
         </div>

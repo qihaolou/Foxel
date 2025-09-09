@@ -4,6 +4,8 @@ import { UserOutlined, LockOutlined, GithubOutlined, SendOutlined, WechatOutline
 import { useAuth } from '../contexts/AuthContext';
 import { useSystemStatus } from '../contexts/SystemContext';
 import { useNavigate } from 'react-router';
+import { useI18n } from '../i18n';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const { Title, Text } = Typography;
 
@@ -15,12 +17,13 @@ export default function LoginPage() {
   const [err, setErr] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const handleSubmit = async () => {
     const u = username.trim();
     const p = password;
     if (!u || !p) {
-      setErr('请输入用户名与密码');
+      setErr(t('Please enter username and password'));
       return;
     }
     console.debug('[LoginPage] submit ->', { username: u, passwordLength: p.length });
@@ -31,7 +34,7 @@ export default function LoginPage() {
       navigate('/');
     } catch (e: any) {
       console.error('[LoginPage] login failed:', e);
-      setErr(e.message || '登录失败');
+      setErr(e.message || t('Login failed'));
     } finally {
       setLoading(false);
     }
@@ -46,6 +49,9 @@ export default function LoginPage() {
       justifyContent: 'center',
       background: 'linear-gradient(to right, var(--ant-color-bg-layout, #f0f2f5), var(--ant-color-fill-secondary, #d7d7d7))'
     }}>
+      <div style={{ position: 'fixed', top: 12, right: 12, zIndex: 1000 }}>
+        <LanguageSwitcher />
+      </div>
       <div style={{
         display: 'flex',
         width: '80%',
@@ -71,9 +77,9 @@ export default function LoginPage() {
               <div style={{ marginBottom: '24px' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: 8 }}>
                   <img src={status?.logo} alt="Foxel Logo" style={{ width: 32, marginRight: 16 }} />
-                  <Title level={2} style={{ margin: 0, color: 'var(--ant-color-text, #111)' }}>欢迎回来</Title>
+                  <Title level={2} style={{ margin: 0, color: 'var(--ant-color-text, #111)' }}>{t('Welcome Back')}</Title>
                 </div>
-                <Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>登录到您的 Foxel 账户</Text>
+                <Text type="secondary" style={{ display: 'block', textAlign: 'center' }}>{t('Sign in to your Foxel account')}</Text>
               </div>
 
               {err && <Alert message={err} type="error" showIcon style={{ marginBottom: 24 }} />}
@@ -82,7 +88,7 @@ export default function LoginPage() {
                 <Form.Item>
                   <Input
                     prefix={<UserOutlined />}
-                    placeholder="用户名/邮箱"
+                    placeholder={t('Username / Email')}
                     value={username}
                     onChange={e => setUsername(e.target.value)}
                     required
@@ -92,7 +98,7 @@ export default function LoginPage() {
                 <Form.Item>
                   <Input.Password
                     prefix={<LockOutlined />}
-                    placeholder="密码"
+                    placeholder={t('Password')}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     required
@@ -106,7 +112,7 @@ export default function LoginPage() {
                     loading={loading}
                     style={{ width: '100%' }}
                   >
-                    登录
+                    {t('Sign In')}
                   </Button>
                 </Form.Item>
               </Form>
@@ -125,7 +131,7 @@ export default function LoginPage() {
           padding: '48px'
         }}>
           <div style={{ maxWidth: '500px' }}>
-            <Title level={3}>您的下一代文件管理系统</Title>
+            <Title level={3}>{t('Your next-generation file manager')}</Title>
             <Text type="secondary" style={{ fontSize: '16px', lineHeight: '1.8' }}>
               Foxel 旨在提供一个安全、高效且智能的文件管理解决方案，帮助您轻松组织、访问和共享您的数字资产。
             </Text>
@@ -134,31 +140,31 @@ export default function LoginPage() {
                 <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
                     <CloudSyncOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
-                    <Text>跨平台同步，随时随地访问</Text>
+                    <Text>{t('Cross-platform sync, access anywhere')}</Text>
                   </Space>
                 </Card>
                 <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
                     <SearchOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
-                    <Text>AI 驱动的智能搜索，快速定位文件</Text>
+                    <Text>{t('AI-powered search for quick find')}</Text>
                   </Space>
                 </Card>
                 <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
                     <ShareAltOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
-                    <Text>灵活的分享与协作，提升团队效率</Text>
+                    <Text>{t('Flexible sharing and collaboration')}</Text>
                   </Space>
                 </Card>
                 <Card size="small" variant="borderless" style={{ backgroundColor: 'var(--ant-color-bg-container)' }}>
                   <Space>
                     <ApartmentOutlined style={{ fontSize: '20px', color: 'var(--ant-color-primary, #1677ff)' }} />
-                    <Text>强大的自动化工作流，简化繁琐任务</Text>
+                    <Text>{t('Powerful automation to simplify tasks')}</Text>
                   </Space>
                 </Card>
               </Space>
             </div>
             <div style={{ marginTop: '48px', textAlign: 'center' }}>
-              <Text type="secondary">加入我们的社区：</Text>
+              <Text type="secondary">{t('Join our community:')}</Text>
               <Button type="text" icon={<GithubOutlined />} href="https://github.com/DrizzleTime/Foxel" target="_blank">GitHub</Button>
               <Button type="text" icon={<SendOutlined />} href="https://t.me/+thDsBfyqJxZkNTU1" target="_blank">Telegram</Button>
               <Button type="text" icon={<WechatOutlined />}>微信</Button>

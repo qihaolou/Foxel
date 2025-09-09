@@ -2,6 +2,7 @@ import { memo, useState, useEffect, useCallback } from 'react';
 import { Table, message, Tag, Input, Select, Button, Space, Modal, DatePicker } from 'antd';
 import PageCard from '../components/PageCard';
 import { logsApi, type LogItem, type PaginatedLogs } from '../api/logs';
+import { useI18n } from '../i18n';
 import { format, formatISO } from 'date-fns';
 
 const { RangePicker } = DatePicker;
@@ -20,6 +21,7 @@ const LogsPage = memo(function LogsPage() {
     end_time: '',
   });
   const [selectedLog, setSelectedLog] = useState<LogItem | null>(null);
+  const { t } = useI18n();
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -31,7 +33,7 @@ const LogsPage = memo(function LogsPage() {
       const res = await logsApi.list(params);
       setData(res);
     } catch (e: any) {
-      message.error(e.message || '加载失败');
+      message.error(e.message || t('Load failed'));
     } finally {
       setLoading(false);
     }
@@ -43,18 +45,18 @@ const LogsPage = memo(function LogsPage() {
 
   const handleClearLogs = () => {
     Modal.confirm({
-      title: '确认清理日志?',
-      content: '该操作将删除选定时间范围内的所有日志，且不可恢复。',
+      title: t('Confirm clear logs?'),
+      content: t('This will delete logs in selected range irreversibly.'),
       onOk: async () => {
         try {
           const params = { start_time: filters.start_time, end_time: filters.end_time };
           if (!params.start_time) delete (params as any).start_time;
           if (!params.end_time) delete (params as any).end_time;
           const res = await logsApi.clear(params);
-          message.success(`成功清理 ${res.deleted_count} 条日志`);
+          message.success(t('Cleared {count} logs', { count: String(res.deleted_count) }));
           fetchList();
         } catch (e: any) {
-          message.error(e.message || '清理失败');
+          message.error(e.message || t('Clear failed'));
         }
       },
     });
@@ -62,13 +64,13 @@ const LogsPage = memo(function LogsPage() {
 
   const columns = [
     {
-      title: '时间',
+      title: t('Time'),
       dataIndex: 'timestamp',
       width: 180,
       render: (ts: string) => format(new Date(ts), 'yyyy-MM-dd HH:mm:ss'),
     },
     {
-      title: '级别',
+      title: t('Level'),
       dataIndex: 'level',
       width: 100,
       render: (level: string) => {
@@ -76,20 +78,20 @@ const LogsPage = memo(function LogsPage() {
         return <Tag color={color}>{level}</Tag>;
       },
     },
-    { title: '来源', dataIndex: 'source', width: 180 },
-    { title: '消息', dataIndex: 'message', ellipsis: true },
+    { title: t('Source'), dataIndex: 'source', width: 180 },
+    { title: t('Message'), dataIndex: 'message', ellipsis: true },
     {
-      title: '操作',
+      title: t('Actions'),
       width: 100,
       render: (_: any, rec: LogItem) => (
-        <Button size="small" onClick={() => setSelectedLog(rec)}>详情</Button>
+        <Button size="small" onClick={() => setSelectedLog(rec)}>{t('Details')}</Button>
       ),
     },
   ];
 
   return (
     <PageCard
-      title="系统日志"
+      title={t('System Logs')}
       extra={
         <Space>
           <RangePicker
@@ -105,7 +107,7 @@ const LogsPage = memo(function LogsPage() {
           />
           <Select
             style={{ width: 120 }}
-            placeholder="级别"
+            placeholder={t('Level')}
             allowClear
             value={filters.level || undefined}
             onChange={level => setFilters(f => ({ ...f, level: level || '', page: 1 }))}
@@ -113,12 +115,12 @@ const LogsPage = memo(function LogsPage() {
           />
           <Input.Search
             style={{ width: 240 }}
-            placeholder="搜索来源"
+            placeholder={t('Search source')}
             onSearch={source => setFilters(f => ({ ...f, source, page: 1 }))}
             allowClear
           />
-          <Button onClick={fetchList} loading={loading}>刷新</Button>
-          <Button danger onClick={handleClearLogs}>清理</Button>
+          <Button onClick={fetchList} loading={loading}>{t('Refresh')}</Button>
+          <Button danger onClick={handleClearLogs}>{t('Clear')}</Button>
         </Space>
       }
     >
@@ -136,7 +138,7 @@ const LogsPage = memo(function LogsPage() {
         }}
       />
       <Modal
-        title="日志详情"
+        title={t('Log Details')}
         open={!!selectedLog}
         onCancel={() => setSelectedLog(null)}
         footer={null}

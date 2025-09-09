@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu, theme } from 'antd';
 import type { VfsEntry } from '../../../api/client';
 import { getAppsForEntry, getDefaultAppForEntry } from '../../../apps/registry';
+import { useI18n } from '../../../i18n';
 import {
   FolderFilled, AppstoreOutlined, AppstoreAddOutlined, DownloadOutlined,
   EditOutlined, DeleteOutlined, InfoCircleOutlined, UploadOutlined, PlusOutlined, ShareAltOutlined, LinkOutlined
@@ -30,13 +31,14 @@ interface ContextMenuProps {
 
 export const ContextMenu: React.FC<ContextMenuProps> = (props) => {
   const { token } = theme.useToken();
+  const { t } = useI18n();
   const { x, y, entry, entries, selectedEntries, processorTypes, onClose, ...actions } = props;
 
   const getContextMenuItems = () => {
     if (!entry) { // Blank context menu
       return [
-        { key: 'upload', label: '上传文件', icon: <UploadOutlined />, onClick: actions.onUpload },
-        { key: 'mkdir', label: '新建目录', icon: <PlusOutlined />, onClick: actions.onCreateDir },
+        { key: 'upload', label: t('Upload File'), icon: <UploadOutlined />, onClick: actions.onUpload },
+        { key: 'mkdir', label: t('New Folder'), icon: <PlusOutlined />, onClick: actions.onCreateDir },
       ];
     }
 
@@ -61,56 +63,56 @@ export const ContextMenu: React.FC<ContextMenuProps> = (props) => {
     return [
       (entry.is_dir || apps.length > 0) ? {
         key: 'open',
-        label: defaultApp ? `打开 (${defaultApp.name})` : '打开',
+        label: defaultApp ? `${t('Open')} (${defaultApp.name})` : t('Open'),
         icon: <FolderFilled />,
         onClick: () => actions.onOpen(entry),
       } : null,
       !entry.is_dir && apps.length > 0 ? {
         key: 'openWith',
-        label: '打开方式',
+        label: t('Open With'),
         icon: <AppstoreOutlined />,
         children: apps.map(a => ({
           key: 'openWith-' + a.key,
-          label: a.name + (a.key === defaultApp?.key ? ' (默认)' : ''),
+          label: a.name + (a.key === defaultApp?.key ? ` (${t('Default')})` : ''),
           onClick: () => actions.onOpenWith(entry, a.key),
         })),
       } : null,
       !entry.is_dir && processorSubMenu.length > 0 ? {
         key: 'process',
-        label: '处理器',
+        label: t('Processor'),
         icon: <AppstoreAddOutlined />,
         children: processorSubMenu,
       } : null,
       {
         key: 'share',
-        label: '分享',
+        label: t('Share'),
         icon: <ShareAltOutlined />,
         onClick: () => actions.onShare(targetEntries),
       },
       {
         key: 'directLink',
-        label: '获取直链',
+        label: t('Get Direct Link'),
         icon: <LinkOutlined />,
         disabled: targetEntries.length !== 1 || targetEntries[0].is_dir,
         onClick: () => actions.onGetDirectLink(targetEntries[0]),
       },
       {
         key: 'download',
-        label: '下载',
+        label: t('Download'),
         icon: <DownloadOutlined />,
         disabled: targetEntries.some(t => t.is_dir) || targetEntries.length > 1,
         onClick: () => actions.onDownload(targetEntries[0]),
       },
       {
         key: 'rename',
-        label: '重命名',
+        label: t('Rename'),
         icon: <EditOutlined />,
         disabled: targetEntries.length !== 1 || targetEntries[0].type === 'mount',
         onClick: () => actions.onRename(targetEntries[0]),
       },
       {
         key: 'delete',
-        label: '删除',
+        label: t('Delete'),
         icon: <DeleteOutlined />,
         danger: true,
         disabled: targetEntries.some(t => t.type === 'mount'),
@@ -118,7 +120,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = (props) => {
       },
       {
         key: 'detail',
-        label: '详情',
+        label: t('Details'),
         icon: <InfoCircleOutlined />,
         onClick: () => actions.onDetail(entry),
       },

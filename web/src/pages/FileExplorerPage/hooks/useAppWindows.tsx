@@ -1,11 +1,13 @@
 import { useState, useCallback } from 'react';
 import { Modal, Checkbox } from 'antd';
+import { useI18n } from '../../../i18n';
 import type { VfsEntry } from '../../../api/client';
 import type { AppDescriptor } from '../../../apps/registry';
 import type { AppWindow } from '../types';
 import { getAppsForEntry, getDefaultAppForEntry, getAppByKey } from '../../../apps/registry';
 
 export function useAppWindows(path: string) {
+  const { t } = useI18n();
   const [appWindows, setAppWindows] = useState<AppWindow[]>([]);
 
   const openWithApp = useCallback((entry: VfsEntry, app: AppDescriptor) => {
@@ -40,7 +42,7 @@ export function useAppWindows(path: string) {
   const openFileWithDefaultApp = useCallback((entry: VfsEntry) => {
     const apps = getAppsForEntry(entry);
     if (!apps.length) {
-      Modal.error({ title: '无法打开该文件：没有可用的应用' });
+      Modal.error({ title: t('Cannot open file: no available app') });
       return;
     }
     const defaultApp = getDefaultAppForEntry(entry) || apps[0];
@@ -50,17 +52,17 @@ export function useAppWindows(path: string) {
   const confirmOpenWithApp = useCallback((entry: VfsEntry, appKey: string) => {
     const app = getAppByKey(appKey);
     if (!app) {
-      Modal.error({ title: '错误', content: `应用 "${appKey}" 不存在。` });
+      Modal.error({ title: t('Error'), content: t('App "{key}" not found.', { key: appKey }) });
       return;
     }
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';
     let setDefault = false;
     Modal.confirm({
-      title: `使用 ${app.name} 打开`,
+      title: t('Open with {app}', { app: app.name }),
       content: (
         <div>
-          <div style={{ marginBottom: 8 }}>文件: {entry.name}</div>
-          <Checkbox onChange={e => setDefault = e.target.checked}>设为该类型(.{ext})默认应用</Checkbox>
+          <div style={{ marginBottom: 8 }}>{t('File')}: {entry.name}</div>
+          <Checkbox onChange={e => setDefault = e.target.checked}>{t('Set as default for .{ext}', { ext })}</Checkbox>
         </div>
       ),
       onOk: () => {

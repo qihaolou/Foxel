@@ -5,6 +5,7 @@ import { shareApi, type ShareInfo } from '../../api/share';
 import { type VfsEntry } from '../../api/vfs';
 import { DirectoryViewer } from './DirectoryViewer';
 import { FileViewer } from './FileViewer';
+import { useI18n } from '../../i18n';
 
 const PublicSharePage = memo(function PublicSharePage() {
   const { token } = useParams<{ token: string }>();
@@ -14,6 +15,7 @@ const PublicSharePage = memo(function PublicSharePage() {
   const [error, setError] = useState('');
   const [password, setPassword] = useState('');
   const [verified, setVerified] = useState(false);
+  const { t } = useI18n();
 
   const loadData = useCallback(async (pwd?: string) => {
     if (!token) return;
@@ -44,7 +46,7 @@ const PublicSharePage = memo(function PublicSharePage() {
       }
 
     } catch (e: any) {
-      setError(e.message || '加载分享失败');
+      setError(e.message || t('Share load failed'));
       if (e.message === '需要密码') {
         setVerified(false);
       }
@@ -66,7 +68,7 @@ const PublicSharePage = memo(function PublicSharePage() {
       setError('');
       loadData(values.password_input);
     } catch (e: any) {
-      message.error(e.message || '密码错误');
+      message.error(e.message || t('Wrong password'));
     }
   };
 
@@ -81,14 +83,14 @@ const PublicSharePage = memo(function PublicSharePage() {
   if (shareInfo?.access_type === 'password' && !verified) {
     return (
       <div style={{ padding: '24px', maxWidth: 400, margin: '100px auto' }}>
-        <Card title="需要密码">
+        <Card title={t('Password Required')}>
           <Form onFinish={handlePasswordSubmit}>
-            <Form.Item name="password_input" rules={[{ required: true, message: '请输入密码' }]}>
-              <Input.Password placeholder="请输入密码" />
+            <Form.Item name="password_input" rules={[{ required: true, message: t('Please enter password') }]}>
+              <Input.Password placeholder={t('Please enter password')} />
             </Form.Item>
             <Form.Item>
               <Button type="primary" htmlType="submit" block>
-                确认
+                {t('Confirm')}
               </Button>
             </Form.Item>
           </Form>
@@ -98,7 +100,7 @@ const PublicSharePage = memo(function PublicSharePage() {
   }
 
   if (!shareInfo) {
-    return <div style={{ textAlign: 'center', padding: 50 }}><Empty description="无法加载分享信息" /></div>;
+    return <div style={{ textAlign: 'center', padding: 50 }}><Empty description={t('Unable to load share info')} /></div>;
   }
 
   const handleFileClick = (entry: VfsEntry, path: string) => {

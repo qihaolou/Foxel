@@ -4,6 +4,7 @@ import PageCard from '../components/PageCard';
 import { tasksApi, type AutomationTask, type QueuedTask } from '../api/tasks';
 import { processorsApi, type ProcessorTypeMeta } from '../api/processors';
 import { ProcessorConfigForm } from '../components/ProcessorConfigForm';
+import { useI18n } from '../i18n';
 
 const TasksPage = memo(function TasksPage() {
   const [loading, setLoading] = useState(false);
@@ -15,6 +16,7 @@ const TasksPage = memo(function TasksPage() {
   const [queueModalOpen, setQueueModalOpen] = useState(false);
   const [queuedTasks, setQueuedTasks] = useState<QueuedTask[]>([]);
   const [queueLoading, setQueueLoading] = useState(false);
+  const { t } = useI18n();
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -122,11 +124,11 @@ const TasksPage = memo(function TasksPage() {
   };
 
   const columns = [
-    { title: '名称', dataIndex: 'name' },
-    { title: '触发事件', dataIndex: 'event', width: 120 },
-    { title: '处理器', dataIndex: 'processor_type', width: 180 },
+    { title: t('Name'), dataIndex: 'name' },
+    { title: t('Trigger Event'), dataIndex: 'event', width: 120 },
+    { title: t('Processor'), dataIndex: 'processor_type', width: 180 },
     {
-      title: '启用', dataIndex: 'enabled', width: 80, render: (v: boolean, rec: AutomationTask) => <Switch
+      title: t('Enabled'), dataIndex: 'enabled', width: 80, render: (v: boolean, rec: AutomationTask) => <Switch
         checked={v}
         size="small"
         loading={loading && editing?.id === rec.id}
@@ -134,13 +136,13 @@ const TasksPage = memo(function TasksPage() {
       />
     },
     {
-      title: '操作',
+      title: t('Actions'),
       width: 160,
       render: (_: any, rec: AutomationTask) => (
         <Space size="small">
-          <Button size="small" onClick={() => openEdit(rec)}>编辑</Button>
-          <Popconfirm title="确认删除?" onConfirm={() => doDelete(rec)}>
-            <Button size="small" danger>删除</Button>
+          <Button size="small" onClick={() => openEdit(rec)}>{t('Edit')}</Button>
+          <Popconfirm title={t('Confirm delete?')} onConfirm={() => doDelete(rec)}>
+            <Button size="small" danger>{t('Delete')}</Button>
           </Popconfirm>
         </Space>
       )
@@ -153,12 +155,12 @@ const TasksPage = memo(function TasksPage() {
 
   return (
     <PageCard
-      title="自动化任务"
+      title={t('Automation Tasks')}
       extra={
         <Space>
-          <Button onClick={fetchList} loading={loading}>刷新</Button>
-          <Button onClick={openQueueModal}>运行中的任务</Button>
-          <Button type="primary" onClick={openCreate}>新建任务</Button>
+          <Button onClick={fetchList} loading={loading}>{t('Refresh')}</Button>
+          <Button onClick={openQueueModal}>{t('Running Tasks')}</Button>
+          <Button type="primary" onClick={openCreate}>{t('Create Task')}</Button>
         </Space>
       }
     >
@@ -171,42 +173,42 @@ const TasksPage = memo(function TasksPage() {
         style={{ marginBottom: 0 }}
       />
       <Drawer
-        title={editing ? `编辑任务: ${editing.name}` : '新建自动化任务'}
+        title={editing ? `${t('Edit Task')}: ${editing.name}` : t('Create Automation Task')}
         width={480}
         open={open}
         onClose={() => { setOpen(false); setEditing(null); }}
         destroyOnClose
         extra={
           <Space>
-            <Button onClick={() => { setOpen(false); setEditing(null); }}>取消</Button>
-            <Button type="primary" onClick={submit} loading={loading}>提交</Button>
+            <Button onClick={() => { setOpen(false); setEditing(null); }}>{t('Cancel')}</Button>
+            <Button type="primary" onClick={submit} loading={loading}>{t('Submit')}</Button>
           </Space>
         }
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="name" label="任务名称" rules={[{ required: true }]}>
+          <Form.Item name="name" label={t('Task Name')} rules={[{ required: true }]}> 
             <Input />
           </Form.Item>
-          <Form.Item name="event" label="触发事件" rules={[{ required: true }]}>
-            <Select options={[
-              { value: 'file_written', label: '文件写入' },
-              { value: 'file_deleted', label: '文件删除' },
+          <Form.Item name="event" label={t('Trigger Event')} rules={[{ required: true }]}> 
+            <Select options={[ 
+              { value: 'file_written', label: t('File Written') }, 
+              { value: 'file_deleted', label: t('File Deleted') }, 
             ]} />
           </Form.Item>
-          <Typography.Title level={5} style={{ marginTop: 8, fontSize: 14 }}>匹配规则</Typography.Title>
-          <Form.Item name="path_pattern" label="路径前缀 (可选)">
+          <Typography.Title level={5} style={{ marginTop: 8, fontSize: 14 }}>{t('Matching Rules')}</Typography.Title>
+          <Form.Item name="path_pattern" label={t('Path Prefix (optional)')}>
             <Input placeholder="/images/screenshots" />
           </Form.Item>
-          <Form.Item name="filename_regex" label="文件名正则 (可选)">
+          <Form.Item name="filename_regex" label={t('Filename Regex (optional)')}>
             <Input placeholder=".*\.png$" />
           </Form.Item>
-          <Form.Item name="enabled" label="启用" valuePropName="checked">
+          <Form.Item name="enabled" label={t('Enabled')} valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Typography.Title level={5} style={{ marginTop: 8, fontSize: 14 }}>执行动作</Typography.Title>
-          <Form.Item name="processor_type" label="处理器" rules={[{ required: true }]}>
+          <Typography.Title level={5} style={{ marginTop: 8, fontSize: 14 }}>{t('Action')}</Typography.Title>
+          <Form.Item name="processor_type" label={t('Processor')} rules={[{ required: true }]}>
             <Select
-              placeholder="选择一个处理器"
+              placeholder={t('Select a processor')}
               options={availableProcessors.map(p => ({ value: p.type, label: `${p.name} (${p.type})` }))}
             />
           </Form.Item>
@@ -218,13 +220,13 @@ const TasksPage = memo(function TasksPage() {
         </Form>
       </Drawer>
       <Modal
-        title="当前任务队列"
+        title={t('Current Task Queue')}
         open={queueModalOpen}
         onCancel={() => setQueueModalOpen(false)}
         width={800}
         footer={[
-          <Button key="refresh" onClick={fetchQueue} loading={queueLoading}>刷新</Button>,
-          <Button key="close" onClick={() => setQueueModalOpen(false)}>关闭</Button>
+          <Button key="refresh" onClick={fetchQueue} loading={queueLoading}>{t('Refresh')}</Button>,
+          <Button key="close" onClick={() => setQueueModalOpen(false)}>{t('Close')}</Button>
         ]}
       >
         <Table
@@ -235,10 +237,10 @@ const TasksPage = memo(function TasksPage() {
           pagination={false}
           columns={[
             { title: 'ID', dataIndex: 'id', width: 120, render: (id) => <Typography.Text style={{ fontSize: 12 }} copyable={{ text: id }}>{id.slice(0, 8)}</Typography.Text> },
-            { title: '任务名', dataIndex: 'name' },
-            { title: '参数', dataIndex: 'task_info', render: (info) => <Typography.Text type="secondary" style={{ fontSize: 12 }}>{JSON.stringify(info)}</Typography.Text> },
+            { title: t('Task Name'), dataIndex: 'name' },
+            { title: t('Params'), dataIndex: 'task_info', render: (info) => <Typography.Text type="secondary" style={{ fontSize: 12 }}>{JSON.stringify(info)}</Typography.Text> },
             {
-              title: '状态', dataIndex: 'status', width: 100, render: (status: QueuedTask['status']) => {
+              title: t('Status'), dataIndex: 'status', width: 100, render: (status: QueuedTask['status']) => {
                 const colorMap = {
                   pending: 'default',
                   running: 'processing',

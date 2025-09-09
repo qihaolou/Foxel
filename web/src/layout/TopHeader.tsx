@@ -4,6 +4,8 @@ import { memo, useState } from 'react';
 import SearchDialog from './SearchDialog.tsx';
 import { authApi } from '../api/auth.ts';
 import { useNavigate } from 'react-router';
+import { useI18n } from '../i18n';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 const { Header } = Layout;
 
@@ -16,6 +18,7 @@ const TopHeader = memo(function TopHeader({ collapsed, onToggle }: TopHeaderProp
   const { token } = theme.useToken();
   const [searchOpen, setSearchOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   const handleLogout = () => {
     authApi.logout();
@@ -37,18 +40,19 @@ const TopHeader = memo(function TopHeader({ collapsed, onToggle }: TopHeaderProp
         style={{ maxWidth: 420 }}
         onClick={() => setSearchOpen(true)}
       >
-        搜索文件 / 标签 / 类型
+        {t('Search files / tags / types')}
       </Button>
       <SearchDialog open={searchOpen} onClose={() => setSearchOpen(false)} />
       <Flex style={{ marginLeft: 'auto' }} align="center" gap={12}>
+        <LanguageSwitcher />
         <Dropdown
           menu={{
             items: [
-              { key: 'logout', label: '退出登录', icon: <LogoutOutlined />, onClick: handleLogout }
+              { key: 'logout', label: t('Log Out'), icon: <LogoutOutlined />, onClick: handleLogout }
             ]
           }}
         >
-          <Button icon={<UserOutlined />}>管理员</Button>
+          <Button icon={<UserOutlined />}>{t('Admin')}</Button>
         </Dropdown>
       </Flex>
     </Header>

@@ -4,6 +4,7 @@ import { vfsApi } from '../../api/vfs';
 import { loadPluginFromUrl, ensureManifest, type RegisteredPlugin } from '../../plugins/runtime';
 import type { PluginItem } from '../../api/plugins';
 import { useAsyncSafeEffect } from '../../hooks/useAsyncSafeEffect';
+import { useI18n } from '../../i18n';
 
 export interface PluginAppHostProps extends AppComponentProps {
   plugin: PluginItem;
@@ -14,6 +15,7 @@ export const PluginAppHost: React.FC<PluginAppHostProps> = ({ plugin, filePath, 
   const [error, setError] = useState<string | null>(null);
   const onCloseRef = useRef(onRequestClose);
   onCloseRef.current = onRequestClose;
+  const { t } = useI18n();
 
   const pluginRef = useRef<RegisteredPlugin | null>(null);
 
@@ -36,7 +38,7 @@ export const PluginAppHost: React.FC<PluginAppHostProps> = ({ plugin, filePath, 
           host: { close: () => onCloseRef.current() },
         });
       } catch (e: any) {
-        if (!isDisposed()) setError(e?.message || '插件运行失败');
+        if (!isDisposed()) setError(e?.message || t('Plugin run failed'));
       }
     },
     [plugin.id, plugin.url, filePath],
@@ -50,7 +52,7 @@ export const PluginAppHost: React.FC<PluginAppHostProps> = ({ plugin, filePath, 
   );
 
   if (error) {
-    return <div style={{ padding: 12, color: 'red' }}>插件错误: {error}</div>;
+    return <div style={{ padding: 12, color: 'red' }}>{t('Plugin Error')}: {error}</div>;
   }
 
   return <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'auto' }} />;

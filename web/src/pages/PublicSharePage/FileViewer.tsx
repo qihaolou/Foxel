@@ -6,6 +6,7 @@ import { type VfsEntry } from '../../api/vfs';
 import { format, parseISO } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import { VideoViewer } from './VideoViewer';
+import { useI18n } from '../../i18n';
 
 const { Title, Text } = Typography;
 
@@ -25,6 +26,7 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
   const [loading, setLoading] = useState(true);
   const [content, setContent] = useState<string>('');
   const [error, setError] = useState('');
+  const { t } = useI18n();
 
   useEffect(() => {
     const loadFileContent = async () => {
@@ -34,12 +36,12 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
         const url = shareApi.downloadUrl(token, path, password);
         const response = await fetch(url);
         if (!response.ok) {
-          throw new Error('无法加载文件');
+          throw new Error('Unable to load file');
         }
         const text = await response.text();
         setContent(text);
       } catch (e: any) {
-        setError(e.message || '加载文件失败');
+        setError(e.message || 'Failed to load file');
       } finally {
         setLoading(false);
       }
@@ -74,18 +76,18 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
       return <ReactMarkdown>{content}</ReactMarkdown>;
     }
 
-    return (
+      return (
       <Empty
         description={
           <div>
-            <p>暂不支持在线预览此类型文件</p>
+            <p>{t('Preview not supported for this file type')}</p>
             <Button
               type="primary"
               icon={<DownloadOutlined />}
               href={downloadUrl}
               download
             >
-              下载文件
+              {t('Download File')}
             </Button>
           </div>
         }
@@ -98,8 +100,13 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
       <Card>
         <Title level={4}>{entry.name}</Title>
         <Text type="secondary">
-          创建于 {shareInfo && format(parseISO(shareInfo.created_at), 'yyyy-MM-dd')}
-          {shareInfo?.expires_at && `，将于 ${format(parseISO(shareInfo.expires_at), 'yyyy-MM-dd')} 过期`}
+          {t('Created on {date}', { date: format(parseISO(shareInfo.created_at), 'yyyy-MM-dd') })}
+          {shareInfo?.expires_at ? (
+            <>
+              {' '}
+              {t('Expires on {date}', { date: format(parseISO(shareInfo.expires_at), 'yyyy-MM-dd') })}
+            </>
+          ) : null}
         </Text>
         <div style={{ marginTop: 16 }}>
           <Button
@@ -107,7 +114,7 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
             icon={<ArrowLeftOutlined />}
             onClick={onBack}
           >
-            返回
+            {t('Back')}
           </Button>
           <Button
             style={{ marginBottom: 16 }}
@@ -115,7 +122,7 @@ export const FileViewer = memo(function FileViewer({ token, shareInfo, entry, pa
             href={shareApi.downloadUrl(token, path, password)}
             download
           >
-            下载
+            {t('Download')}
           </Button>
         </div>
         <Card>

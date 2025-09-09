@@ -18,7 +18,7 @@ export function useFileExplorer(navKey: string) {
     total: 0,
     showSizeChanger: true,
     showQuickJumper: true,
-    showTotal: (total: number, range: [number, number]) => `共 ${total} 项，第 ${range[0]}-${range[1]} 项`,
+    showTotal: (total: number, range: [number, number]) => `${total} ${'items'} ${range[0]}-${range[1]}`,
     pageSizeOptions: ['20', '50', '100', '200']
   });
   const [sortBy, setSortBy] = useState('name');
@@ -43,7 +43,7 @@ export function useFileExplorer(navKey: string) {
       }));
       setProcessorTypes(processors);
     } catch (e: any) {
-      message.error(e.message || '加载失败');
+      message.error(e.message || 'Load failed');
     } finally {
       setLoading(false);
     }

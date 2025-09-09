@@ -20,27 +20,27 @@ export const navGroups: NavGroup[] = [
     key: 'library',
     title: '',
     children: [
-      { key: 'files', icon: React.createElement(FolderOpenOutlined), label: '全部文件' },
+      { key: 'files', icon: React.createElement(FolderOpenOutlined), label: 'All Files' },
     ]
   },
   {
     key: 'manage',
-    title: '管理',
+    title: 'Manage',
     children: [
-      { key: 'tasks', icon: React.createElement(RobotOutlined), label: '自动化' },
-      { key: 'share', icon: React.createElement(ShareAltOutlined), label: '我的分享' },
-      { key: 'offline', icon: React.createElement(CloudDownloadOutlined), label: '离线下载' },
-      { key: 'adapters', icon: React.createElement(ApiOutlined), label: '存储挂载' },
-      { key: 'plugins', icon: React.createElement(AppstoreOutlined), label: '应用中心' },
+      { key: 'tasks', icon: React.createElement(RobotOutlined), label: 'Automation' },
+      { key: 'share', icon: React.createElement(ShareAltOutlined), label: 'My Shares' },
+      { key: 'offline', icon: React.createElement(CloudDownloadOutlined), label: 'Offline Downloads' },
+      { key: 'adapters', icon: React.createElement(ApiOutlined), label: 'Adapters' },
+      { key: 'plugins', icon: React.createElement(AppstoreOutlined), label: 'Plugins' },
     ]
   },
   {
     key: 'system',
-    title: '系统',
+    title: 'System',
     children: [
-      { key: 'settings', icon: React.createElement(SettingOutlined), label: '系统设置' },
-      { key: 'backup', icon: React.createElement(DatabaseOutlined), label: '备份恢复' },
-      { key: 'logs', icon: React.createElement(BugOutlined), label: '系统日志' }
+      { key: 'settings', icon: React.createElement(SettingOutlined), label: 'System Settings' },
+      { key: 'backup', icon: React.createElement(DatabaseOutlined), label: 'Backup & Restore' },
+      { key: 'logs', icon: React.createElement(BugOutlined), label: 'System Logs' }
     ]
   }
 ];

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Typography, Spin, theme, Card, Descriptions, Divider, Badge, Space, message } from 'antd';
 import { FileOutlined, FolderOutlined, CameraOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { useI18n } from '../../../i18n';
 import type { VfsEntry } from '../../../api/client';
 
 interface Props {
@@ -10,21 +11,24 @@ interface Props {
   onClose: () => void;
 }
 
-const exifFieldMap: Record<string, { label: string; format?: (v: any) => string }> = {
-  '271': { label: '设备品牌' },
-  '272': { label: '设备型号' },
-  '306': { label: '拍摄时间' },
-  '282': { label: '水平分辨率', format: v => `${v} dpi` },
-  '283': { label: '垂直分辨率', format: v => `${v} dpi` },
-  '33434': { label: '曝光时间', format: v => `${v} 秒` },
-  '33437': { label: '光圈值', format: v => `f/${v}` },
-  '34855': { label: 'ISO' },
-  '37377': { label: '焦距', format: v => `${v} mm` },
-  '40962': { label: '宽度', format: v => `${v} px` },
-  '40963': { label: '高度', format: v => `${v} px` },
-};
+function getExifFieldMap(t: (k: string)=>string): Record<string, { label: string; format?: (v: any) => string }> {
+  return {
+    '271': { label: t('Camera Make') },
+    '272': { label: t('Camera Model') },
+    '306': { label: t('Capture Time') },
+    '282': { label: t('X Resolution'), format: v => `${v} dpi` },
+    '283': { label: t('Y Resolution'), format: v => `${v} dpi` },
+    '33434': { label: t('Exposure Time'), format: v => `${v} s` },
+    '33437': { label: t('Aperture'), format: v => `f/${v}` },
+    '34855': { label: 'ISO' },
+    '37377': { label: t('Focal Length'), format: v => `${v} mm` },
+    '40962': { label: t('Width'), format: v => `${v} px` },
+    '40963': { label: t('Height'), format: v => `${v} px` },
+  };
+}
 
-function renderExif(exif: Record<string, any>) {
+function renderExif(exif: Record<string, any>, t: (k: string)=>string) {
+  const exifFieldMap = getExifFieldMap(t);
   const items = Object.entries(exifFieldMap)
     .filter(([key]) => exif[key] !== undefined)
     .map(([key, { label, format }]) => ({
@@ -37,7 +41,7 @@ function renderExif(exif: Record<string, any>) {
     return (
       <div style={{ textAlign: 'center', padding: 24, color: 'var(--ant-color-text-tertiary, #999)' }}>
         <InfoCircleOutlined style={{ fontSize: 20, marginBottom: 8 }} />
-        <div>无常见EXIF信息</div>
+        <div>{t('No common EXIF info')}</div>
       </div>
     );
   }
@@ -58,10 +62,10 @@ function renderExif(exif: Record<string, any>) {
   );
 }
 
-function formatFileSize(size: number | string): string {
+function formatFileSize(size: number | string, t: (k: string)=>string): string {
   if (typeof size !== 'number') return String(size);
   
-  const units = ['字节', 'KB', 'MB', 'GB'];
+  const units = [t('Bytes'), 'KB', 'MB', 'GB'];
   let index = 0;
   let fileSize = size;
   
@@ -75,13 +79,14 @@ function formatFileSize(size: number | string): string {
 
 export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose }) => {
   const { token } = theme.useToken();
+  const { t } = useI18n();
   
   return (
     <Modal
       title={
         <Space>
           <InfoCircleOutlined style={{ color: token.colorPrimary }} />
-          <span>文件属性</span>
+          <span>{t('File Properties')}</span>
           {entry && (
             <Typography.Text type="secondary" style={{ fontSize: 14 }}>
               - {entry.name}
@@ -100,7 +105,7 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
       {loading ? (
         <div style={{ textAlign: 'center', padding: 48 }}>
           <Spin size="large" />
-          <div style={{ marginTop: 16, color: token.colorTextSecondary }}>加载文件信息...</div>
+          <div style={{ marginTop: 16, color: token.colorTextSecondary }}>{t('Loading file info...')}</div>
         </div>
       ) : data ? (
         data.error ? (
@@ -118,7 +123,7 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
                 title={
                   <Space>
                     {data.is_dir ? <FolderOutlined /> : <FileOutlined />}
-                    基本信息
+                    {t('Basic Info')}
                   </Space>
                 }
                 style={{ borderRadius: 8, height: 'fit-content' }}
@@ -129,36 +134,36 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
                   items={[
                     {
                       key: 'name',
-                      label: '名称',
+                      label: t('Name'),
                       children: <Typography.Text strong>{data.name}</Typography.Text>
                     },
                     {
                       key: 'type',
-                      label: '类型',
+                      label: t('Type'),
                       children: (
                         <Badge 
                           status={data.is_dir ? 'processing' : 'default'} 
-                          text={data.type || (data.is_dir ? '文件夹' : '文件')}
+                          text={data.type || (data.is_dir ? t('Folder') : t('File'))}
                         />
                       )
                     },
                     {
                       key: 'size',
-                      label: '大小',
-                      children: formatFileSize(data.size)
+                      label: t('Size'),
+                      children: formatFileSize(data.size, t)
                     },
                     {
                       key: 'mtime',
-                      label: '修改时间',
+                      label: t('Modified Time'),
                       children: data.mtime ? (
                         typeof data.mtime === 'number' 
-                          ? new Date(data.mtime * 1000).toLocaleString('zh-CN')
+                          ? new Date(data.mtime * 1000).toLocaleString()
                           : data.mtime
                       ) : '-'
                     },
                     {
                       key: 'path',
-                      label: '路径',
+                      label: t('Path'),
                       children: (
                         <Typography.Text style={{ display: 'block', marginTop: 4 }}>
                           <a
@@ -168,9 +173,9 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
                               try {
                                 if (navigator.clipboard) {
                                   navigator.clipboard.writeText(data.path).then(() => {
-                                    message.success('路径已复制到剪贴板');
+                                    message.success(t('Path copied to clipboard'));
                                   }).catch(() => {
-                                    message.error('复制失败');
+                                    message.error(t('Copy failed'));
                                   });
                                 } else {
                                   const textarea = document.createElement('textarea');
@@ -179,10 +184,10 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
                                   textarea.select();
                                   const ok = document.execCommand('copy');
                                   document.body.removeChild(textarea);
-                                  message[ok ? 'success' : 'error'](ok ? '路径已复制到剪贴板' : '复制失败');
+                                  message[ok ? 'success' : 'error'](ok ? t('Path copied to clipboard') : t('Copy failed'));
                                 }
                               } catch {
-                                message.error('复制失败');
+                                message.error(t('Copy failed'));
                               }
                             }}
                             style={{
@@ -214,7 +219,7 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
                   <>
                     <Divider style={{ margin: '12px 0' }} />
                     <div>
-                      <span style={{ fontWeight: 500, color: token.colorTextSecondary }}>权限：</span>
+                      <span style={{ fontWeight: 500, color: token.colorTextSecondary }}>{t('Permissions')}：</span>
                       <Typography.Text code>{data.mode.toString(8)}</Typography.Text>
                     </div>
                   </>
@@ -230,12 +235,12 @@ export const FileDetailModal: React.FC<Props> = ({ entry, loading, data, onClose
                   title={
                     <Space>
                       <CameraOutlined />
-                      EXIF信息
+                      {t('EXIF Info')}
                     </Space>
                   }
                   style={{ borderRadius: 8, height: 'fit-content' }}
                 >
-                  {renderExif(data.exif)}
+                  {renderExif(data.exif, t)}
                 </Card>
               </div>
             )}

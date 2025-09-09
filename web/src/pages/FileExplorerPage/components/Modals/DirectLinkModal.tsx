@@ -3,6 +3,7 @@ import { Modal, Radio, message, Button, Typography, Input, Space } from 'antd';
 import { CopyOutlined, FileMarkdownOutlined } from '@ant-design/icons';
 import type { VfsEntry } from '../../../../api/client';
 import { vfsApi } from '../../../../api/client';
+import { useI18n } from '../../../../i18n';
 
 interface DirectLinkModalProps {
   entry: VfsEntry | null;
@@ -30,6 +31,7 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
   const [loading, setLoading] = useState(false);
   const [expiresIn, setExpiresIn] = useState(3600);
   const [link, setLink] = useState('');
+  const { t } = useI18n();
 
   useEffect(() => {
     if (open && entry) {
@@ -51,7 +53,7 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
       }
       setLink(url);
     } catch (e: any) {
-      message.error(e.message || '生成链接失败');
+      message.error(e.message || t('Failed to generate link'));
     } finally {
       setLoading(false);
     }
@@ -59,14 +61,14 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    message.success('已复制到剪贴板');
+    message.success(t('Copied to clipboard'));
   };
 
   const handleCopyMarkdown = () => {
     if (!entry || !link) return;
     const markdownText = generateMarkdownLink(entry.name, link);
     navigator.clipboard.writeText(markdownText);
-    message.success('Markdown 格式已复制到剪贴板');
+    message.success(t('Markdown copied to clipboard'));
   };
 
   const handleExpiresChange = (e: any) => {
@@ -75,33 +77,33 @@ export const DirectLinkModal = memo(function DirectLinkModal({ entry, path, open
 
   return (
     <Modal
-      title="获取直链"
+      title={t('Get Direct Link')}
       open={open}
       onCancel={onCancel}
       footer={[
         <Button key="back" onClick={onCancel}>
-          关闭
+          {t('Close')}
         </Button>,
       ]}
     >
       <Typography.Paragraph>
-        为 <strong>{entry?.name}</strong> 生成一个直接访问链接。
+        {t('Generate a direct link for {name}', { name: entry?.name || '' })}
       </Typography.Paragraph>
       <Radio.Group value={expiresIn} onChange={handleExpiresChange} style={{ marginBottom: 16 }}>
-        <Radio.Button value={3600}>1 小时</Radio.Button>
-        <Radio.Button value={86400}>1 天</Radio.Button>
-        <Radio.Button value={604800}>7 天</Radio.Button>
-        <Radio.Button value={0}>永久</Radio.Button>
+        <Radio.Button value={3600}>{t('1 hour')}</Radio.Button>
+        <Radio.Button value={86400}>{t('1 day')}</Radio.Button>
+        <Radio.Button value={604800}>{t('7 days')}</Radio.Button>
+        <Radio.Button value={0}>{t('Forever')}</Radio.Button>
       </Radio.Group>
 
       <div style={{ display: 'flex', gap: 8 }}>
-        <Input readOnly value={link} disabled={loading} placeholder={loading ? "正在生成链接..." : "链接将显示在这里"} />
+        <Input readOnly value={link} disabled={loading} placeholder={loading ? t('Generating link...') : t('Link will appear here')} />
         <Space.Compact>
           <Button icon={<CopyOutlined />} onClick={() => handleCopy(link)} disabled={!link || loading}>
-            复制
+            {t('Copy')}
           </Button>
           <Button icon={<FileMarkdownOutlined />} onClick={handleCopyMarkdown} disabled={!link || loading}>
-            复制 Markdown
+            {t('Copy Markdown')}
           </Button>
         </Space.Compact>
       </div>

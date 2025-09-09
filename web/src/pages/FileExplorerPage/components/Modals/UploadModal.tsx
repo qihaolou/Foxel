@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Modal, Button, List, Progress, Typography, message, Flex } from 'antd';
 import { CopyOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 import type { UploadFile } from '../../hooks/useUploader';
+import { useI18n } from '../../../../i18n';
 
 interface UploadModalProps {
   visible: boolean;
@@ -11,6 +12,7 @@ interface UploadModalProps {
 }
 
 const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onStartUpload }) => {
+  const { t } = useI18n();
 
   const allSuccess = files.every(f => f.status === 'success');
   
@@ -22,7 +24,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onSt
 
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
-    message.success('链接已复制到剪贴板');
+    message.success(t('Copied to clipboard'));
   };
 
   const renderStatus = (file: UploadFile) => {
@@ -33,7 +35,7 @@ const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onSt
         return (
           <Flex align="center" gap={8}>
             <CheckCircleFilled style={{ color: 'var(--ant-color-success, #52c41a)' }} />
-            <Typography.Text type="secondary" style={{ verticalAlign: 'middle' }}>上传成功</Typography.Text>
+            <Typography.Text type="secondary" style={{ verticalAlign: 'middle' }}>{t('Upload succeeded')}</Typography.Text>
             <Button icon={<CopyOutlined />} size="small" onClick={() => handleCopy(file.permanentLink!)} type="text" />
           </Flex>
         );
@@ -41,23 +43,23 @@ const UploadModal: React.FC<UploadModalProps> = ({ visible, files, onClose, onSt
         return (
             <Flex align="center" gap={8}>
                 <CloseCircleFilled style={{ color: 'var(--ant-color-error, #ff4d4f)' }} />
-                <Typography.Text type="danger" title={file.error}>上传失败</Typography.Text>
+                <Typography.Text type="danger" title={file.error}>{t('Upload failed')}</Typography.Text>
             </Flex>
         );
       default:
-        return <Typography.Text type="secondary">等待上传</Typography.Text>;
+        return <Typography.Text type="secondary">{t('Waiting to upload')}</Typography.Text>;
     }
   };
 
   return (
     <Modal
       open={visible}
-      title="上传文件"
+      title={t('Upload File')}
       width={600}
       onCancel={onClose}
       footer={[
         <Button key="close" onClick={onClose} disabled={!allSuccess && files.some(f => f.status === 'uploading')}>
-          {allSuccess ? '关闭' : '完成'}
+          {allSuccess ? t('Close') : t('Done')}
         </Button>,
       ]}
     >

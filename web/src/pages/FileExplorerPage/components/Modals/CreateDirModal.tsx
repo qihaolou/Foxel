@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Input } from 'antd';
+import { useI18n } from '../../../../i18n';
 
 interface CreateDirModalProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface CreateDirModalProps {
 
 export const CreateDirModal: React.FC<CreateDirModalProps> = ({ open, onOk, onCancel }) => {
   const [name, setName] = useState('');
+  const { t } = useI18n();
 
   useEffect(() => {
     if (open) {
@@ -22,7 +24,7 @@ export const CreateDirModal: React.FC<CreateDirModalProps> = ({ open, onOk, onCa
 
   return (
     <Modal
-      title="新建目录"
+      title={t('New Folder')}
       open={open}
       onOk={handleOk}
       onCancel={onCancel}
@@ -30,7 +32,7 @@ export const CreateDirModal: React.FC<CreateDirModalProps> = ({ open, onOk, onCa
       destroyOnClose
     >
       <Input
-        placeholder="目录名称"
+        placeholder={t('Folder Name')}
         value={name}
         onChange={e => setName(e.target.value)}
         onPressEnter={handleOk}

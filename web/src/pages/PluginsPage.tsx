@@ -4,6 +4,7 @@ import { GithubOutlined, LinkOutlined } from '@ant-design/icons';
 import { pluginsApi, type PluginItem } from '../api/plugins';
 import { loadPluginFromUrl, ensureManifest } from '../plugins/runtime';
 import { reloadPluginApps } from '../apps/registry';
+import { useI18n } from '../i18n';
 
 const PluginsPage = memo(function PluginsPage() {
   const [data, setData] = useState<PluginItem[]>([]);
@@ -12,6 +13,7 @@ const PluginsPage = memo(function PluginsPage() {
   const [q, setQ] = useState('');
   const [form] = Form.useForm<{ url: string }>();
   const { token } = theme.useToken();
+  const { t } = useI18n();
 
   const reload = async () => {
     try { setLoading(true); setData(await pluginsApi.list()); } finally { setLoading(false); }
@@ -31,7 +33,7 @@ const PluginsPage = memo(function PluginsPage() {
       form.resetFields();
       await reload();
       await reloadPluginApps();
-      message.success('安装成功');
+      message.success(t('Installed successfully'));
     } catch {}
   };
 
@@ -49,7 +51,7 @@ const PluginsPage = memo(function PluginsPage() {
 
   const renderCard = (p: PluginItem) => {
     const icon = p.icon || '/plugins/demo-text-viewer.svg';
-    const name = p.name || `插件 ${p.id}`;
+    const name = p.name || `${t('Plugin')} ${p.id}`;
     const exts = (p.supported_exts || []).slice(0, 6);
     const more = (p.supported_exts || []).length - exts.length;
     const title = (
@@ -68,10 +70,10 @@ const PluginsPage = memo(function PluginsPage() {
         styles={{ body: { padding: 12 } } as any}
         style={{ borderRadius: 10, boxShadow: token.boxShadowTertiary }}
         actions={[
-          <a key="open" href={p.url} target="_blank" rel="noreferrer">打开链接</a>,
-          <Button key="copy" type="link" size="small" onClick={async () => { try { await navigator.clipboard.writeText(p.url); message.success('已复制链接'); } catch {} }}>复制链接</Button>,
-          <Popconfirm key="del" title="确认删除该插件？" onConfirm={async () => { await pluginsApi.remove(p.id); await reload(); await reloadPluginApps(); }}>
-            <Button type="link" danger size="small">删除</Button>
+          <a key="open" href={p.url} target="_blank" rel="noreferrer">{t('Open Link')}</a>,
+          <Button key="copy" type="link" size="small" onClick={async () => { try { await navigator.clipboard.writeText(p.url); message.success(t('Link copied')); } catch {} }}>{t('Copy Link')}</Button>,
+          <Popconfirm key="del" title={t('Confirm delete this plugin?')} onConfirm={async () => { await pluginsApi.remove(p.id); await reload(); await reloadPluginApps(); }}>
+            <Button type="link" danger size="small">{t('Delete')}</Button>
           </Popconfirm>
         ]}
       >
@@ -87,7 +89,7 @@ const PluginsPage = memo(function PluginsPage() {
             <Divider style={{ margin: '8px 0' }} />
             {(p.author || p.github || p.website) && (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: token.colorTextTertiary, fontSize: 12 }}>
-                {p.author && <span>作者: {p.author}</span>}
+                {p.author && <span>{t('Author')}: {p.author}</span>}
                 <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                   {p.github && (
                     <a href={p.github || undefined} target="_blank" rel="noreferrer" title="GitHub">
@@ -95,7 +97,7 @@ const PluginsPage = memo(function PluginsPage() {
                     </a>
                   )}
                   {p.website && (
-                    <a href={p.website || undefined} target="_blank" rel="noreferrer" title="官网">
+                    <a href={p.website || undefined} target="_blank" rel="noreferrer" title={t('Website')}>
                       <LinkOutlined style={{ fontSize: 16, color: token.colorTextTertiary }} />
                     </a>
                   )}
@@ -111,10 +113,10 @@ const PluginsPage = memo(function PluginsPage() {
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-        <Button type="primary" onClick={() => setAdding(true)}>安装应用</Button>
-        <Button onClick={reload} loading={loading}>刷新</Button>
+        <Button type="primary" onClick={() => setAdding(true)}>{t('Install App')}</Button>
+        <Button onClick={reload} loading={loading}>{t('Refresh')}</Button>
         <Input
-          placeholder="搜索 名称/作者/链接/扩展名"
+          placeholder={t('Search name/author/url/extension')}
           value={q}
           onChange={e => setQ(e.target.value)}
           allowClear
@@ -131,21 +133,21 @@ const PluginsPage = memo(function PluginsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <Empty description="暂无插件" />
+        <Empty description={t('No plugins')} />
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 12 }}>
           {filtered.map(renderCard)}
         </div>
       )}
       <Modal
-        title="安装应用"
+        title={t('Install App')}
         open={adding}
         onCancel={() => setAdding(false)}
         onOk={handleAdd}
-        okText="安装"
+        okText={t('Install')}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="url" label="应用链接" rules={[{ required: true }, { type: 'url', message: '请输入合法的 URL' }]}>
+          <Form.Item name="url" label={t('App URL')} rules={[{ required: true }, { type: 'url', message: t('Please input a valid URL') }]}>
             <Input placeholder="https://example.com/plugin.js" />
           </Form.Item>
         </Form>

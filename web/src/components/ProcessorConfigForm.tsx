@@ -1,6 +1,7 @@
 import React from 'react';
 import { Form, Input, Select, Typography } from 'antd';
 import type { ProcessorTypeMeta } from '../api/processors';
+import { useI18n } from '../i18n';
 
 interface ProcessorConfigFormProps {
   processorMeta: ProcessorTypeMeta | undefined;
@@ -9,17 +10,18 @@ interface ProcessorConfigFormProps {
 }
 
 export const ProcessorConfigForm: React.FC<ProcessorConfigFormProps> = ({ processorMeta, configPath }) => {
+  const { t } = useI18n();
   if (!processorMeta) {
-    return <Typography.Text type="secondary">请先选择处理器</Typography.Text>;
+    return <Typography.Text type="secondary">{t('Please select a processor')}</Typography.Text>;
   }
   if (!processorMeta.config_schema?.length) {
-    return <Typography.Text type="secondary">该处理器无配置项</Typography.Text>;
+    return <Typography.Text type="secondary">{t('No config fields')}</Typography.Text>;
   }
 
   return (
     <>
       {processorMeta.config_schema.map(field => {
-        const rules = field.required ? [{ required: true, message: `请输入${field.label}` }] : [];
+        const rules = field.required ? [{ required: true, message: t('Please input {label}', { label: field.label }) }] : [];
         let inputNode: React.ReactNode;
 
         switch (field.type) {
@@ -31,7 +33,7 @@ export const ProcessorConfigForm: React.FC<ProcessorConfigFormProps> = ({ proces
             break;
           case 'select':
             inputNode = (
-              <Select placeholder={field.placeholder || '请选择'}>
+              <Select placeholder={field.placeholder || t('Please select')}>
                 {field.options?.map((opt: any) => (
                   <Select.Option key={String(opt.value)} value={opt.value}>
                     {opt.label}
@@ -48,7 +50,7 @@ export const ProcessorConfigForm: React.FC<ProcessorConfigFormProps> = ({ proces
           <Form.Item
             key={field.key}
             name={[...configPath, field.key]}
-            label={field.label}
+            label={t(field.label)}
             rules={rules}
             initialValue={field.default}
           >

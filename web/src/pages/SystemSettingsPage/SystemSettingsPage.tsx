@@ -6,24 +6,25 @@ import { vectorDBApi } from '../../api/vectorDB';
 import { AppstoreOutlined, RobotOutlined, DatabaseOutlined, SkinOutlined } from '@ant-design/icons';
 import { useTheme } from '../../contexts/ThemeContext';
 import '../../styles/settings-tabs.css';
+import { useI18n } from '../../i18n';
 
 const APP_CONFIG_KEYS: {key: string, label: string, default?: string}[] = [
-  { key: 'APP_NAME', label: '应用名称' },
-  { key: 'APP_LOGO', label: 'LOGO地址' },
-  { key: 'APP_DOMAIN', label: '应用域名' },
-  { key: 'FILE_DOMAIN', label: '文件域名' },
+  { key: 'APP_NAME', label: 'App Name' },
+  { key: 'APP_LOGO', label: 'Logo URL' },
+  { key: 'APP_DOMAIN', label: 'App Domain' },
+  { key: 'FILE_DOMAIN', label: 'File Domain' },
 ];
 
 const VISION_CONFIG_KEYS = [
-  { key: 'AI_VISION_API_URL', label: '视觉模型 API 地址' },
-  { key: 'AI_VISION_MODEL', label: '视觉模型', default: 'Qwen/Qwen2.5-VL-32B-Instruct' },
-  { key: 'AI_VISION_API_KEY', label: '视觉模型 API Key' },
+  { key: 'AI_VISION_API_URL', label: 'Vision API URL' },
+  { key: 'AI_VISION_MODEL', label: 'Vision Model', default: 'Qwen/Qwen2.5-VL-32B-Instruct' },
+  { key: 'AI_VISION_API_KEY', label: 'Vision API Key' },
 ];
 
 const EMBED_CONFIG_KEYS = [
-  { key: 'AI_EMBED_API_URL', label: '嵌入模型 API 地址' },
-  { key: 'AI_EMBED_MODEL', label: '嵌入模型', default: 'Qwen/Qwen3-Embedding-8B' },
-  { key: 'AI_EMBED_API_KEY', label: '嵌入模型 API Key' },
+  { key: 'AI_EMBED_API_URL', label: 'Embedding API URL' },
+  { key: 'AI_EMBED_MODEL', label: 'Embedding Model', default: 'Qwen/Qwen3-Embedding-8B' },
+  { key: 'AI_EMBED_API_KEY', label: 'Embedding API Key' },
 ];
 
 const ALL_AI_KEYS = [...VISION_CONFIG_KEYS, ...EMBED_CONFIG_KEYS];
@@ -42,6 +43,7 @@ export default function SystemSettingsPage() {
   const [config, setConfigState] = useState<Record<string, string> | null>(null);
   const [activeTab, setActiveTab] = useState('appearance');
   const { refreshTheme, previewTheme } = useTheme();
+  const { t } = useI18n();
 
   useEffect(() => {
     getAllConfig().then((data) => setConfigState(data as Record<string, string>));
@@ -53,14 +55,14 @@ export default function SystemSettingsPage() {
       for (const [key, value] of Object.entries(values)) {
         await setConfig(key, String(value ?? ''));
       }
-      message.success('保存成功');
+      message.success(t('Saved successfully'));
       setConfigState({ ...config, ...values });
       // trigger theme refresh if related keys changed
       if (Object.keys(values).some(k => Object.values(THEME_KEYS).includes(k))) {
         await refreshTheme();
       }
     } catch (e: any) {
-      message.error(e.message || '保存失败');
+      message.error(e.message || t('Save failed'));
     }
     setLoading(false);
   };
@@ -73,12 +75,12 @@ export default function SystemSettingsPage() {
   }, [activeTab]);
 
   if (!config) {
-    return <PageCard title='系统设置'><div>加载中...</div></PageCard>;
+    return <PageCard title={t('System Settings')}><div>{t('Loading...')}</div></PageCard>;
   }
 
   return (
     <PageCard
-      title='系统设置'
+      title={t('System Settings')}
     >
       <Space direction="vertical" style={{ width: '100%' }} size={32}>
         <Tabs
@@ -93,7 +95,7 @@ export default function SystemSettingsPage() {
               label: (
                 <span>
                   <SkinOutlined style={{ marginRight: 8 }} />
-                  外观设置
+                  {t('Appearance Settings')}
                 </span>
               ),
               children: (
@@ -130,39 +132,39 @@ export default function SystemSettingsPage() {
                     // Validate JSON if provided
                     if (vals[THEME_KEYS.TOKENS]) {
                       try { JSON.parse(vals[THEME_KEYS.TOKENS]); }
-                      catch { return message.error('高级 Token 需为合法 JSON'); }
+                      catch { return message.error(t('Advanced tokens must be valid JSON')); }
                     }
                     await handleSave(vals);
                   }}
                   style={{ marginTop: 24 }}
                   key={'appearance-' + JSON.stringify(config)}
                 >
-                  <Card title="主题">
-                    <Form.Item name={THEME_KEYS.MODE} label="主题模式">
+                  <Card title={t('Theme')}>
+                    <Form.Item name={THEME_KEYS.MODE} label={t('Theme Mode')}>
                       <Radio.Group buttonStyle="solid">
-                        <Radio.Button value="light">亮色</Radio.Button>
-                        <Radio.Button value="dark">暗色</Radio.Button>
-                        <Radio.Button value="system">跟随系统</Radio.Button>
+                        <Radio.Button value="light">{t('Light')}</Radio.Button>
+                        <Radio.Button value="dark">{t('Dark')}</Radio.Button>
+                        <Radio.Button value="system">{t('Follow System')}</Radio.Button>
                       </Radio.Group>
                     </Form.Item>
-                    <Form.Item name={THEME_KEYS.PRIMARY} label="主色">
+                    <Form.Item name={THEME_KEYS.PRIMARY} label={t('Primary Color')}>
                       <Input type="color" size="large" />
                     </Form.Item>
-                    <Form.Item name={THEME_KEYS.RADIUS} label="圆角">
+                    <Form.Item name={THEME_KEYS.RADIUS} label={t('Border Radius')}>
                       <InputNumber min={0} max={24} style={{ width: '100%' }} />
                     </Form.Item>
                   </Card>
-                  <Card title="高级" style={{ marginTop: 24 }}>
-                    <Form.Item name={THEME_KEYS.TOKENS} label="覆盖 AntD Token（JSON）" tooltip="例如：{ &quot;colorText&quot;: &quot;#222&quot; }">
+                  <Card title={t('Advanced')} style={{ marginTop: 24 }}>
+                    <Form.Item name={THEME_KEYS.TOKENS} label={t('Override AntD Tokens (JSON)')} tooltip={t('e.g. {"colorText": "#222"}') }>
                       <Input.TextArea autoSize={{ minRows: 4 }} placeholder='{ "colorText": "#222" }' />
                     </Form.Item>
-                    <Form.Item name={THEME_KEYS.CSS} label="自定义 CSS">
-                      <Input.TextArea autoSize={{ minRows: 6 }} placeholder={":root{ }\n/* 支持任意 CSS */"} />
+                    <Form.Item name={THEME_KEYS.CSS} label={t('Custom CSS')}>
+                      <Input.TextArea autoSize={{ minRows: 6 }} placeholder={":root{ }\n/* CSS */"} />
                     </Form.Item>
                   </Card>
                   <Form.Item style={{ marginTop: 24 }}>
                     <Button type="primary" htmlType="submit" loading={loading} block>
-                      保存
+                      {t('Save')}
                     </Button>
                   </Form.Item>
                 </Form>
@@ -173,7 +175,7 @@ export default function SystemSettingsPage() {
               label: (
                 <span>
                   <AppstoreOutlined style={{ marginRight: 8 }} />
-                  应用设置
+                  {t('App Settings')}
                 </span>
               ),
               children: (
@@ -187,13 +189,13 @@ export default function SystemSettingsPage() {
                   key={JSON.stringify(config)}
                 >
                   {APP_CONFIG_KEYS.map(({ key, label }) => (
-                    <Form.Item key={key} name={key} label={label}>
+                    <Form.Item key={key} name={key} label={t(label)}>
                       <Input size="large" />
                     </Form.Item>
                   ))}
                   <Form.Item>
                     <Button type="primary" htmlType="submit" loading={loading} block>
-                      保存
+                      {t('Save')}
                     </Button>
                   </Form.Item>
                 </Form>
@@ -204,7 +206,7 @@ export default function SystemSettingsPage() {
               label: (
                 <span>
                   <RobotOutlined style={{ marginRight: 8 }} />
-                  AI设置
+                  {t('AI Settings')}
                 </span>
               ),
               children: (
@@ -217,23 +219,23 @@ export default function SystemSettingsPage() {
                   style={{ marginTop: 24 }}
                   key={JSON.stringify(config)}
                 >
-                  <Card title="视觉模型" style={{ marginBottom: 24 }}>
+                  <Card title={t('Vision Model')} style={{ marginBottom: 24 }}>
                     {VISION_CONFIG_KEYS.map(({ key, label }) => (
-                      <Form.Item key={key} name={key} label={label}>
+                      <Form.Item key={key} name={key} label={t(label)}>
                         <Input size="large" />
                       </Form.Item>
                     ))}
                   </Card>
-                  <Card title="嵌入模型">
+                  <Card title={t('Embedding Model')}>
                     {EMBED_CONFIG_KEYS.map(({ key, label }) => (
-                      <Form.Item key={key} name={key} label={label}>
+                      <Form.Item key={key} name={key} label={t(label)}>
                         <Input size="large" />
                       </Form.Item>
                     ))}
                   </Card>
                   <Form.Item style={{ marginTop: 24 }}>
                     <Button type="primary" htmlType="submit" loading={loading} block>
-                      保存
+                      {t('Save')}
                     </Button>
                   </Form.Item>
                 </Form>
@@ -244,16 +246,16 @@ export default function SystemSettingsPage() {
               label: (
                 <span>
                   <DatabaseOutlined style={{ marginRight: 8 }} />
-                  向量数据库
+                  {t('Vector Database')}
                 </span>
               ),
               children: (
-                <Card title="向量数据库设置" style={{ marginTop: 24 }}>
+                <Card title={t('Vector Database Settings')} style={{ marginTop: 24 }}>
                   <Form layout="vertical">
-                    <Form.Item label="数据库类型">
+                    <Form.Item label={t('Database Type')}>
                       <Select
                         size="large"
-                        value="Milvus Lite"
+                        value={'Milvus Lite'}
                         disabled
                         options={[{ value: 'Milvus Lite', label: 'Milvus Lite' }]}
                       />
@@ -264,23 +266,23 @@ export default function SystemSettingsPage() {
                         block
                         onClick={() => {
                           Modal.confirm({
-                            title: '确认清空向量数据库？',
-                            content: '此操作将删除所有集合中的所有数据，且不可逆。',
-                            okText: '确认清空',
+                            title: t('Confirm clear vector database?'),
+                            content: t('This will delete all collections irreversibly.'),
+                            okText: t('Confirm Clear'),
                             okType: 'danger',
-                            cancelText: '取消',
+                            cancelText: t('Cancel'),
                             onOk: async () => {
                               try {
                                 await vectorDBApi.clearAll();
-                                message.success('向量数据库已清空');
+                                message.success(t('Vector database cleared'));
                               } catch (e: any) {
-                                message.error(e.message || '清空失败');
+                                message.error(e.message || t('Clear failed'));
                               }
                             },
                           });
                         }}
                       >
-                        清空向量库
+                        {t('Clear Vector DB')}
                       </Button>
                     </Form.Item>
                   </Form>

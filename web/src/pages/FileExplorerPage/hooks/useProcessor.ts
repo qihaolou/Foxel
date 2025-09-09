@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { message } from 'antd';
+import { useI18n } from '../../../i18n';
 import { processorsApi, type ProcessorTypeMeta } from '../../../api/processors';
 import type { VfsEntry } from '../../../api/client';
 
@@ -10,6 +11,7 @@ interface ProcessorParams {
 }
 
 export function useProcessor({ path, processorTypes, refresh }: ProcessorParams) {
+  const { t } = useI18n();
   const [modal, setModal] = useState<{ entry: VfsEntry | null; visible: boolean }>({ entry: null, visible: false });
   const [selectedProcessor, setSelectedProcessor] = useState<string>('');
   const [config, setConfig] = useState<any>({});
@@ -48,11 +50,11 @@ export function useProcessor({ path, processorTypes, refresh }: ProcessorParams)
       };
 
       await processorsApi.process(params);
-      message.success('处理完成');
+      message.success(t('Processing finished'));
       setModal({ entry: null, visible: false });
       if (overwrite || savingPath) refresh();
     } catch (e: any) {
-      message.error(e.message || '处理失败');
+      message.error(e.message || t('Processing failed'));
     } finally {
       setLoading(false);
     }

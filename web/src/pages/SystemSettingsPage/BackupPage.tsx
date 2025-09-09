@@ -3,19 +3,21 @@ import { Button, Typography, Upload, message, Modal } from 'antd';
 import PageCard from '../../components/PageCard';
 import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import { backupApi } from '../../api/backup';
+import { useI18n } from '../../i18n';
 
 const { Paragraph, Text } = Typography;
 
 const BackupPage = memo(function BackupPage() {
   const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
 
   const handleExport = async () => {
     setLoading(true);
     try {
       await backupApi.export();
-      message.success('导出已开始，请检查您的下载。');
+      message.success(t('Export started, check your downloads.'));
     } catch (e: any) {
-      message.error(e.message || '导出失败');
+      message.error(e.message || t('Export failed'));
     } finally {
       setLoading(false);
     }
@@ -23,24 +25,24 @@ const BackupPage = memo(function BackupPage() {
 
   const handleImport = (file: File) => {
     Modal.confirm({
-      title: '确认导入备份?',
+      title: t('Confirm import backup?'),
       content: (
         <Typography>
-          <Paragraph>您确定要从此文件导入数据吗?</Paragraph>
-          <Paragraph strong>警告：此操作将覆盖当前数据库中的所有现有数据，包括用户（含密码）、设置、存储和任务。此操作不可逆！</Paragraph>
+          <Paragraph>{t('Are you sure to import from this file?')}</Paragraph>
+          <Paragraph strong>{t('Warning: This will overwrite all data including users (with passwords), settings, storages and tasks. Irreversible!')}</Paragraph>
         </Typography>
       ),
-      okText: '确认导入',
+      okText: t('Confirm Import'),
       okType: 'danger',
-      cancelText: '取消',
+      cancelText: t('Cancel'),
       onOk: async () => {
         setLoading(true);
         try {
           const response = await backupApi.import(file);
-          message.success(response.message || '导入成功！页面将刷新。');
+          message.success(response.message || t('Import succeeded! The page will refresh.'));
           setTimeout(() => window.location.reload(), 2000);
         } catch (e: any) {
-          message.error(e.message || '导入失败');
+          message.error(e.message || t('Import failed'));
         } finally {
           setLoading(false);
         }
@@ -50,33 +52,33 @@ const BackupPage = memo(function BackupPage() {
   };
 
   return (
-    <PageCard title="备份和恢复">
+    <PageCard title={t('Backup & Restore')}>
 
       <div style={{ display: 'flex', gap: '16px' }}>
-        <PageCard title="导出" style={{ flex: 1 }}>
+        <PageCard title={t('Export')} style={{ flex: 1 }}>
           <Paragraph>
-            点击下面的按钮将所有数据（包括存储、用户、自动化任务和分享）导出为一个 JSON 文件。
-            <Text strong>请妥善保管您的备份文件。</Text>
+            {t('Export all data (adapters, users, tasks, shares) into a JSON file.')}
+            <Text strong>{t('Keep your backup file safe.')}</Text>
           </Paragraph>
           <Button
             icon={<DownloadOutlined />}
             onClick={handleExport}
             loading={loading}
           >
-            导出备份
+            {t('Export Backup')}
           </Button>
         </PageCard>
-        <PageCard title="恢复" style={{ flex: 1 }}>
+        <PageCard title={t('Import')} style={{ flex: 1 }}>
           <Paragraph>
-            从之前导出的JSON文件恢复数据。
-            <Text strong type="danger">警告：此操作将清除并覆盖现有数据。</Text>
+            {t('Restore data from a previously exported JSON file.')}
+            <Text strong type="danger">{t('Warning: This will clear and overwrite existing data.')}</Text>
           </Paragraph>
           <Upload
             beforeUpload={handleImport}
             showUploadList={false}
           >
             <Button icon={<UploadOutlined />} loading={loading}>
-              选择文件并恢复
+              {t('Choose File and Restore')}
             </Button>
           </Upload>
         </PageCard>

@@ -2,6 +2,7 @@ import { memo, useState, useEffect, useCallback } from 'react';
 import { Table, Button, Space, Drawer, Form, Input, Switch, message, Typography, Popconfirm, Select } from 'antd';
 import PageCard from '../components/PageCard';
 import { adaptersApi, type AdapterItem } from '../api/client';
+import { useI18n } from '../i18n';
 
 
 interface AdapterTypeField {
@@ -25,6 +26,7 @@ const AdaptersPage = memo(function AdaptersPage() {
   const [editing, setEditing] = useState<AdapterItem | null>(null);
   const [form] = Form.useForm();
   const [availableTypes, setAvailableTypes] = useState<AdapterTypeMeta[]>([]);
+  const { t } = useI18n();
 
   const fetchList = useCallback(async () => {
     setLoading(true);
@@ -36,7 +38,7 @@ const AdaptersPage = memo(function AdaptersPage() {
       setData(list);
       setAvailableTypes(types);
     } catch (e: any) {
-      message.error(e.message || '加载失败');
+      message.error(e.message || t('Load failed'));
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,7 @@ const AdaptersPage = memo(function AdaptersPage() {
         }
       });
       if (miss.length) {
-        message.error('缺少必填配置: ' + miss.join(', '));
+        message.error(t('Missing required config:') + ' ' + miss.join(', '));
         return;
       }
       const body = {
@@ -104,17 +106,17 @@ const AdaptersPage = memo(function AdaptersPage() {
       setLoading(true);
       if (editing) {
         await adaptersApi.update(editing.id, body as any);
-        message.success('更新成功');
+        message.success(t('Updated successfully'));
       } else {
         await adaptersApi.create(body as any);
-        message.success('创建成功');
+        message.success(t('Created successfully'));
       }
       setOpen(false);
       setEditing(null);
       fetchList();
     } catch (e: any) {
       if (e?.errorFields) return; // 表单校验
-      message.error(e.message || '操作失败');
+      message.error(e.message || t('Operation failed'));
     } finally {
       setLoading(false);
     }
@@ -123,10 +125,10 @@ const AdaptersPage = memo(function AdaptersPage() {
   const doDelete = async (rec: AdapterItem) => {
     try {
       await adaptersApi.remove(rec.id);
-      message.success('已删除');
+      message.success(t('Deleted'));
       fetchList();
     } catch (e: any) {
-      message.error(e.message || '删除失败');
+      message.error(e.message || t('Delete failed'));
     }
   };
 
@@ -134,22 +136,22 @@ const AdaptersPage = memo(function AdaptersPage() {
     try {
       setLoading(true);
       await adaptersApi.update(rec.id, { ...rec, enabled: checked });
-      message.success('状态已更新');
+      message.success(t('Status updated'));
       fetchList();
     } catch (e: any) {
-      message.error(e.message || '更新失败');
+      message.error(e.message || t('Update failed'));
     } finally {
       setLoading(false);
     }
   };
 
   const columns = [
-    { title: '名称', dataIndex: 'name' },
-    { title: '类型', dataIndex: 'type', width: 100 },
-    { title: '挂载路径', dataIndex: 'path', width: 140, render: (v: string) => v || '-' },
-    { title: '子路径', dataIndex: 'sub_path', width: 140, render: (v: string) => v || '-' },
+    { title: t('Name'), dataIndex: 'name' },
+    { title: t('Type'), dataIndex: 'type', width: 100 },
+    { title: t('Mount Path'), dataIndex: 'path', width: 140, render: (v: string) => v || '-' },
+    { title: t('Sub Path'), dataIndex: 'sub_path', width: 140, render: (v: string) => v || '-' },
     {
-      title: '启用',
+      title: t('Enabled'),
       dataIndex: 'enabled',
       width: 80,
       render: (v: boolean, rec: AdapterItem) => (
@@ -162,13 +164,13 @@ const AdaptersPage = memo(function AdaptersPage() {
       )
     },
     {
-      title: '操作',
+      title: t('Actions'),
       width: 160,
       render: (_: any, rec: AdapterItem) => (
         <Space size="small">
-          <Button size="small" onClick={() => openEdit(rec)}>编辑</Button>
-          <Popconfirm title="确认删除?" onConfirm={() => doDelete(rec)}>
-            <Button size="small" danger>删除</Button>
+          <Button size="small" onClick={() => openEdit(rec)}>{t('Edit')}</Button>
+          <Popconfirm title={t('Confirm delete?')} onConfirm={() => doDelete(rec)}>
+            <Button size="small" danger>{t('Delete')}</Button>
           </Popconfirm>
         </Space>
       )
@@ -179,9 +181,9 @@ const AdaptersPage = memo(function AdaptersPage() {
   const currentTypeMeta = availableTypes.find(t => t.type === selectedType);
 
   function renderConfigFields() {
-    if (!currentTypeMeta) return <Typography.Text type="secondary">无配置项</Typography.Text>;
+    if (!currentTypeMeta) return <Typography.Text type="secondary">{t('No config fields')}</Typography.Text>;
     return currentTypeMeta.config_schema.map(field => {
-      const rules = field.required ? [{ required: true, message: `请输入${field.label}` }] : [];
+      const rules = field.required ? [{ required: true, message: t('Please input {label}', { label: field.label }) }] : [];
       let inputNode: any = <Input placeholder={field.placeholder} />;
       if (field.type === 'password') inputNode = <Input.Password placeholder={field.placeholder} />;
       if (field.type === 'number') inputNode = <Input type="number" placeholder={field.placeholder} />;
@@ -189,7 +191,7 @@ const AdaptersPage = memo(function AdaptersPage() {
         <Form.Item
           key={field.key}
           name={['config', field.key]}
-          label={field.label}
+          label={t(field.label)}
           rules={rules}
         >
           {inputNode}
@@ -200,11 +202,11 @@ const AdaptersPage = memo(function AdaptersPage() {
 
   return (
     <PageCard
-      title="存储适配器"
+      title={t('Storage Adapters')}
       extra={
         <Space>
-          <Button onClick={fetchList} loading={loading}>刷新</Button>
-          <Button type="primary" onClick={openCreate}>新建适配器</Button>
+          <Button onClick={fetchList} loading={loading}>{t('Refresh')}</Button>
+          <Button type="primary" onClick={openCreate}>{t('Create Adapter')}</Button>
         </Space>
       }
     >
@@ -217,15 +219,15 @@ const AdaptersPage = memo(function AdaptersPage() {
         style={{ marginBottom: 0 }}
       />
       <Drawer
-        title={editing ? `编辑: ${editing.name}` : '新建适配器'}
+        title={editing ? `${t('Edit')}: ${editing.name}` : t('Create Adapter')}
         width={480}
         open={open}
         onClose={() => { setOpen(false); setEditing(null); }}
         destroyOnClose
         extra={
           <Space>
-            <Button onClick={() => { setOpen(false); setEditing(null); }}>取消</Button>
-            <Button type="primary" onClick={submit} loading={loading}>提交</Button>
+            <Button onClick={() => { setOpen(false); setEditing(null); }}>{t('Cancel')}</Button>
+            <Button type="primary" onClick={submit} loading={loading}>{t('Submit')}</Button>
           </Space>
         }
       >
@@ -234,12 +236,12 @@ const AdaptersPage = memo(function AdaptersPage() {
           layout="vertical"
           initialValues={{ enabled: true }}
         >
-          <Form.Item name="name" label="名称" rules={[{ required: true, message: '请输入名称' }]}>
-            <Input placeholder="唯一名称" />
+          <Form.Item name="name" label={t('Name')} rules={[{ required: true, message: t('Please input {label}', { label: t('Name') }) }]}>
+            <Input placeholder={t('Unique name')} />
           </Form.Item>
-          <Form.Item name="type" label="类型" rules={[{ required: true }]}>
+          <Form.Item name="type" label={t('Type')} rules={[{ required: true }]}>
             <Select
-              placeholder="选择适配器类型"
+              placeholder={t('Select adapter type')}
               options={availableTypes.map(t => ({ value: t.type, label: `${t.name} (${t.type})` }))}
               onChange={() => {
                 const t = availableTypes.find(v => v.type === form.getFieldValue('type'));
@@ -251,16 +253,16 @@ const AdaptersPage = memo(function AdaptersPage() {
               }}
             />
           </Form.Item>
-          <Form.Item name="path" label="挂载路径" rules={[{ required: true, message: '请输入挂载路径' }]}>
-            <Input placeholder="/或/drive" />
+          <Form.Item name="path" label={t('Mount Path')} rules={[{ required: true, message: t('Please input {label}', { label: t('Mount Path') }) }]}>
+            <Input placeholder={t('/ or /drive')} />
           </Form.Item>
-          <Form.Item name="sub_path" label="子路径(可选)">
-            <Input placeholder="适配器内部子目录" />
+          <Form.Item name="sub_path" label={t('Sub Path (optional)')}>
+            <Input placeholder={t('Sub directory inside adapter')} />
           </Form.Item>
-          <Form.Item name="enabled" label="启用" valuePropName="checked">
+          <Form.Item name="enabled" label={t('Enabled')} valuePropName="checked">
             <Switch />
           </Form.Item>
-          <Typography.Title level={5} style={{ marginTop: 8, fontSize: 14 }}>适配器配置</Typography.Title>
+          <Typography.Title level={5} style={{ marginTop: 8, fontSize: 14 }}>{t('Adapter Config')}</Typography.Title>
           {renderConfigFields()}
         </Form>
       </Drawer>
