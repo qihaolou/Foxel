@@ -38,7 +38,11 @@ export const vfsApi = {
     });
     return request<DirListing>(`/fs/${encodeURI(trimmed)}?${params}`);
   },
-  readFile: (path: string) => request<ArrayBuffer>(`/fs/file/${encodeURI(path.replace(/^\/+/, ''))}`),
+  readFile: async (path: string) => {
+    const enc = encodeURI(path.replace(/^\/+/, ''));
+    const resp = await request(`/fs/file/${enc}`, { rawResponse: true });
+    return await (resp as Response).arrayBuffer();
+  },
   uploadFile: (fullPath: string, file: File | Blob) => {
     const fd = new FormData();
     fd.append('file', file);

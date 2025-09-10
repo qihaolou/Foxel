@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { Layout, Spin, Button, Space, message } from 'antd';
 import MDEditor from '@uiw/react-md-editor';
+import Editor from '@monaco-editor/react';
 import type { AppComponentProps } from '../types';
 import { vfsApi } from '../../api/vfs';
+import request from '../../api/client';
 
 const { Header, Content } = Layout;
 
@@ -11,20 +13,66 @@ export const TextEditorApp: React.FC<AppComponentProps> = ({ filePath, entry, on
   const [saving, setSaving] = useState(false);
   const [content, setContent] = useState('');
   const [initialContent, setInitialContent] = useState('');
+  const [truncated, setTruncated] = useState(false);
+  const MAX_PREVIEW_BYTES = 1024 * 1024; // 1MB
   const isDirty = content !== initialContent;
-
-  // 使用 ref 来持有最新的 onRequestClose 函数，避免它成为 effect 的依赖项
   const onRequestCloseRef = useRef(onRequestClose);
   onRequestCloseRef.current = onRequestClose;
+
+  const ext = useMemo(() => entry.name.split('.').pop()?.toLowerCase() || '', [entry.name]);
+  const isMarkdown = ext === 'md' || ext === 'markdown';
+  const monacoLanguage = useMemo(() => {
+    switch (ext) {
+      case 'json':
+        return 'json';
+      case 'js':
+        return 'javascript';
+      case 'ts':
+        return 'typescript';
+      case 'html':
+        return 'html';
+      case 'css':
+        return 'css';
+      case 'py':
+        return 'python';
+      case 'sh':
+        return 'shell';
+      case 'yaml':
+      case 'yml':
+        return 'yaml';
+      case 'xml':
+        return 'xml';
+      case 'txt':
+      case 'log':
+      default:
+        return 'plaintext';
+    }
+  }, [ext]);
 
   useEffect(() => {
     const loadFile = async () => {
       try {
         setLoading(true);
-        const data = await vfsApi.readFile(filePath);
-        const text = typeof data === 'string' ? data : new TextDecoder().decode(data);
-        setContent(text);
-        setInitialContent(text);
+        setTruncated(false);
+        const shouldTruncate = (entry.size ?? 0) > MAX_PREVIEW_BYTES;
+        if (shouldTruncate) {
+          const enc = encodeURI(filePath.replace(/^\/+/, ''));
+          const resp = await request(`/fs/file/${enc}`, {
+            method: 'GET',
+            headers: { Range: `bytes=0-${MAX_PREVIEW_BYTES - 1}` },
+            rawResponse: true,
+          });
+          const buf = await (resp as Response).arrayBuffer();
+          const text = new TextDecoder().decode(buf);
+          setContent(text);
+          setInitialContent(text);
+          setTruncated(true);
+        } else {
+          const data = await vfsApi.readFile(filePath);
+          const text = typeof data === 'string' ? data : new TextDecoder().decode(data);
+          setContent(text);
+          setInitialContent(text);
+        }
       } catch (error) {
         message.error(`加载文件失败: ${error instanceof Error ? error.message : '未知错误'}`);
         onRequestCloseRef.current();
@@ -33,9 +81,12 @@ export const TextEditorApp: React.FC<AppComponentProps> = ({ filePath, entry, on
       }
     };
     loadFile();
-  }, [filePath]); // effect 只依赖 filePath，因此只在文件路径变化时执行一次
-
+  }, [filePath, entry.size]);
   const handleSave = useCallback(async () => {
+    if (truncated) {
+      message.warning('大文件仅预览前 1MB，已禁用保存');
+      return;
+    }
     if (!isDirty) return;
     try {
       setSaving(true);
@@ -48,7 +99,7 @@ export const TextEditorApp: React.FC<AppComponentProps> = ({ filePath, entry, on
     } finally {
       setSaving(false);
     }
-  }, [content, filePath, isDirty]);
+  }, [content, filePath, isDirty, truncated]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -77,10 +128,10 @@ export const TextEditorApp: React.FC<AppComponentProps> = ({ filePath, entry, on
         }}
       >
         <span style={{ color: 'var(--ant-color-text, rgba(0,0,0,0.88))' }}>
-          {entry.name} {isDirty && '*'}
+          {entry.name} {isDirty && '*'} {truncated && '（大文件仅预览前 1MB，编辑与保存已禁用）'}
         </span>
         <Space>
-          <Button type="primary" size="small" onClick={handleSave} loading={saving} disabled={!isDirty}>
+          <Button type="primary" size="small" onClick={handleSave} loading={saving} disabled={!isDirty || truncated}>
             保存
           </Button>
         </Space>
@@ -91,12 +142,28 @@ export const TextEditorApp: React.FC<AppComponentProps> = ({ filePath, entry, on
             <Spin />
           </div>
         ) : (
-          <MDEditor
-            value={content}
-            onChange={(val) => setContent(val || '')}
-            height="100%"
-            preview="live"
-          />
+          isMarkdown ? (
+            <MDEditor
+              value={content}
+              onChange={(val) => setContent(val || '')}
+              height="100%"
+              preview={truncated ? 'preview' : 'live'}
+            />
+          ) : (
+            <Editor
+              value={content}
+              onChange={(val) => setContent(val || '')}
+              height="100%"
+              language={monacoLanguage}
+              options={{
+                readOnly: truncated,
+                minimap: { enabled: false },
+                scrollBeyondLastLine: false,
+                wordWrap: 'on',
+                fontSize: 13,
+              }}
+            />
+          )
         )}
       </Content>
     </Layout>
