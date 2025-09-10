@@ -5,11 +5,18 @@ from services.logging import LogService
 from models.database import UserAccount
 import jwt
 from jwt.exceptions import InvalidTokenError
-from services.auth import  ALGORITHM
+from services.auth import ALGORITHM
 from services.config import ConfigCenter
+
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
+        path = request.url.path
+        method = request.method.upper()
+        if method == "GET":
+            if path == "/api/logs" or path == "/api/plugins" or path.startswith("/api/config"):
+                return await call_next(request)
+
         start_time = time.time()
         user_id = None
         if "authorization" in request.headers:
@@ -27,9 +34,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
                 pass
 
         response = await call_next(request)
-        
+
         process_time = (time.time() - start_time) * 1000
-        
+
         details = {
             "client_ip": request.client.host,
             "method": request.method,
@@ -38,9 +45,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             "status_code": response.status_code,
             "process_time_ms": round(process_time, 2)
         }
-        
+
         message = f"{request.method} {request.url.path} - {response.status_code}"
-        
+
         await LogService.api(message, details, user_id)
-        
+
         return response
