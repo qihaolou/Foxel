@@ -316,6 +316,14 @@ export const en = {
   'Install': 'Install',
   'App URL': 'App URL',
   'Please input a valid URL': 'Please input a valid URL',
+  'Installed': 'Installed',
+  'Discover': 'Discover',
+  'Search apps': 'Search apps',
+  'Sort by': 'Sort by',
+  'Downloads': 'Downloads',
+  'Created (newest)': 'Created (newest)',
+  'Installed already': 'Installed',
+  'No results': 'No results',
 
   // Setup page
   'Initialization succeeded! Logging you in...': 'Initialization succeeded! Logging you in...',

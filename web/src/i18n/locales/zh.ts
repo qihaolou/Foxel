@@ -318,6 +318,14 @@ export const zh = {
   'Install': '安装',
   'App URL': '应用链接',
   'Please input a valid URL': '请输入合法的 URL',
+  'Installed': '已安装',
+  'Discover': '发现',
+  'Search apps': '搜索应用',
+  'Sort by': '排序',
+  'Downloads': '下载量',
+  'Created (newest)': '创建时间（最新）',
+  'Installed already': '已安装',
+  'No results': '暂无结果',
 
   // Setup page
   'Initialization succeeded! Logging you in...': '初始化成功！正在为您登录，请不要刷新。',
