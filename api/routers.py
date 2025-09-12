@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 
 from .routes import adapters, virtual_fs, auth, config, processors, tasks, logs, share, backup, search, vector_db
+from .routes import webdav
 from .routes import plugins
 
 
@@ -18,3 +19,4 @@ def include_routers(app: FastAPI):
     app.include_router(backup.router)
     app.include_router(vector_db.router)
     app.include_router(plugins.router)
+    app.include_router(webdav.router)
