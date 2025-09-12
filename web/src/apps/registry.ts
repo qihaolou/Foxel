@@ -39,6 +39,7 @@ function registerPluginAsApp(p: PluginItem) {
     name: p.name || `插件 ${p.id}`,
     supported,
     component: (props: any) => React.createElement(PluginAppHost, { plugin: p, ...props }),
+    iconUrl: p.icon || undefined,
     default: false,
     defaultBounds: p.default_bounds || undefined,
     defaultMaximized: p.default_maximized || undefined,
@@ -88,6 +89,7 @@ export async function reloadPluginApps() {
         existing.name = p.name || `插件 ${p.id}`;
         existing.defaultBounds = p.default_bounds || undefined;
         existing.defaultMaximized = p.default_maximized || undefined;
+        existing.iconUrl = p.icon || existing.iconUrl;
       }
     });
   } catch { }

@@ -1,11 +1,10 @@
 import { memo, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router';
 import { theme, Pagination } from 'antd';
-import { AppWindowsLayer } from '../../apps/AppWindowsLayer';
 import { useFileExplorer } from './hooks/useFileExplorer';
 import { useFileSelection } from './hooks/useFileSelection';
 import { useFileActions } from './hooks/useFileActions.tsx';
-import { useAppWindows } from './hooks/useAppWindows.tsx';
+import { useAppWindows } from '../../contexts/AppWindowsContext';
 import { useContextMenu } from './hooks/useContextMenu';
 import { useProcessor } from './hooks/useProcessor';
 import { useThumbnails } from './hooks/useThumbnails';
@@ -37,7 +36,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
   const { path, entries, loading, pagination, processorTypes, sortBy, sortOrder, load, navigateTo, goUp, handlePaginationChange, refresh, handleSortChange } = useFileExplorer(navKey);
   const { selectedEntries, handleSelect, handleSelectRange, clearSelection, setSelectedEntries } = useFileSelection();
   const { doCreateDir, doDelete, doRename, doDownload, doShare, doGetDirectLink } = useFileActions({ path, refresh, clearSelection, onShare: (entries) => setSharingEntries(entries), onGetDirectLink: (entry) => setDirectLinkEntry(entry) });
-  const { appWindows, openFileWithDefaultApp, confirmOpenWithApp, closeWindow, toggleMax, bringToFront, updateWindow } = useAppWindows(path);
+  const { openFileWithDefaultApp, confirmOpenWithApp } = useAppWindows();
   const { ctxMenu, blankCtxMenu, openContextMenu, openBlankContextMenu, closeContextMenus } = useContextMenu();
   const uploader = useUploader(path, refresh);
   const { handleFileDrop } = uploader;
@@ -65,8 +64,8 @@ const FileExplorerPage = memo(function FileExplorerPage() {
       const next = (path === '/' ? '' : path) + '/' + entry.name;
       navigateTo(next.replace(/\/+/g, '/'));
     } else {
-      openFileWithDefaultApp(entry);
-    }
+      openFileWithDefaultApp(entry, path);
+      }
   };
 
   const openDetail = async (entry: VfsEntry) => {
@@ -172,7 +171,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
             onRowClick={(r, e) => handleSelect(r, e.ctrlKey || e.metaKey)}
             onSelectionChange={setSelectedEntries}
             onOpen={handleOpenEntry}
-            onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, appKey)}
+            onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, appKey, path)}
             onRename={setRenaming}
             onDelete={(entry) => doDelete([entry])}
             onContextMenu={openContextMenu}
@@ -232,7 +231,7 @@ const FileExplorerPage = memo(function FileExplorerPage() {
           processorTypes={processorTypes}
           onClose={closeContextMenus}
           onOpen={handleOpenEntry}
-          onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, appKey)}
+          onOpenWith={(entry, appKey) => confirmOpenWithApp(entry, appKey, path)}
           onDownload={doDownload}
           onRename={setRenaming}
           onDelete={(entriesToDelete) => doDelete(entriesToDelete)}
@@ -253,7 +252,6 @@ const FileExplorerPage = memo(function FileExplorerPage() {
         onClose={uploader.closeModal}
         onStartUpload={uploader.startUpload}
       />
-      <AppWindowsLayer windows={appWindows} onClose={closeWindow} onToggleMax={toggleMax} onBringToFront={bringToFront} onUpdateWindow={updateWindow} />
       <DropzoneOverlay visible={isDragging} />
     </div>
   );

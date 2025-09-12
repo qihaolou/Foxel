@@ -4,6 +4,7 @@ import { OfficeViewerApp } from './OfficeViewer.tsx';
 export const descriptor: AppDescriptor = {
   key: 'office-viewer',
   name: 'Office 文档查看器',
+  iconUrl: 'https://api.iconify.design/mdi:file-word-box.svg',
   supported: (entry) => {
     if (entry.is_dir) return false;
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';

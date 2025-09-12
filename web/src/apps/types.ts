@@ -11,6 +11,7 @@ export interface AppDescriptor {
   name: string;
   supported: (entry: VfsEntry) => boolean;
   component: React.ComponentType<AppComponentProps>;
+  iconUrl?: string;
   default?: boolean;
   defaultMaximized?: boolean;
   /**

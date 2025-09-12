@@ -12,11 +12,14 @@ import SystemSettingsPage from '../pages/SystemSettingsPage/SystemSettingsPage.t
 import LogsPage from '../pages/LogsPage.tsx';
 import BackupPage from '../pages/SystemSettingsPage/BackupPage.tsx';
 import PluginsPage from '../pages/PluginsPage.tsx';
+import { AppWindowsProvider, useAppWindows } from '../contexts/AppWindowsContext';
+import { AppWindowsLayer } from '../apps/AppWindowsLayer';
 
-const LayoutShell = memo(function LayoutShell() {
+const ShellBody = memo(function ShellBody() {
   const { navKey = 'files' } = useParams();
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = useState(false);
+  const { windows, closeWindow, toggleMax, bringToFront, updateWindow } = useAppWindows();
   return (
     <Layout style={{ minHeight: '100vh', background: 'var(--ant-color-bg-layout)' }}>
       <SideNav
@@ -43,7 +46,23 @@ const LayoutShell = memo(function LayoutShell() {
           </div>
         </Layout.Content>
       </Layout>
+      {/* 常驻渲染应用窗口（过滤最小化在内部处理） */}
+      <AppWindowsLayer
+        windows={windows}
+        onClose={closeWindow}
+        onToggleMax={toggleMax}
+        onBringToFront={bringToFront}
+        onUpdateWindow={updateWindow}
+      />
     </Layout>
+  );
+});
+
+const LayoutShell = memo(function LayoutShell() {
+  return (
+    <AppWindowsProvider>
+      <ShellBody />
+    </AppWindowsProvider>
   );
 });
 

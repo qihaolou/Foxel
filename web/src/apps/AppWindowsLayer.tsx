@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 import { Space, Button } from 'antd';
-import { FullscreenExitOutlined, FullscreenOutlined, CloseOutlined } from '@ant-design/icons';
+import { FullscreenExitOutlined, FullscreenOutlined, CloseOutlined, MinusOutlined } from '@ant-design/icons';
 import type { AppDescriptor, AppComponentProps } from './types';
 import type { VfsEntry } from '../api/client';
 
@@ -10,6 +10,7 @@ export interface AppWindowItem {
   entry: VfsEntry;
   filePath: string;
   maximized: boolean;
+  minimized: boolean;
   x: number;
   y: number;
   width: number;
@@ -187,9 +188,11 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
     ));
   };
 
+  const visibleWindows = windows.filter(w => !w.minimized);
+
   return (
     <>
-      {windows.map((w, idx) => {
+      {visibleWindows.map((w, idx) => {
         const AppComp = w.app.component as React.FC<AppComponentProps>;
         const useSystemWindow = w.app.useSystemWindow !== false; // 默认为 true
         if (!useSystemWindow) {
@@ -291,6 +294,21 @@ export const AppWindowsLayer: React.FC<AppWindowsLayerProps> = ({ windows, onClo
                 {w.app.name} - {w.entry.name}
               </span>
               <Space size={4}>
+                <Button
+                  type="text"
+                  size="small"
+                  aria-label="最小化"
+                  icon={<MinusOutlined />}
+                  onClick={() => onUpdateWindow(w.id, { minimized: true })}
+                  style={{
+                    color: 'var(--ant-color-text-secondary, #555)',
+                    width: 30,
+                    height: 30,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                />
                 <Button
                   type="text"
                   size="small"

@@ -17,6 +17,7 @@ import { getLatestVersion } from '../api/config.ts';
 import ReactMarkdown from 'react-markdown';
 import { useTheme } from '../contexts/ThemeContext';
 import { useI18n } from '../i18n';
+import { useAppWindows } from '../contexts/AppWindowsContext';
 const { Sider } = Layout;
 
 export interface SideNavProps {
@@ -54,6 +55,16 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
   };
 
   const hasUpdate = latestVersion && latestVersion.version !== status?.version;
+  const { windows, restoreWindow } = useAppWindows();
+  const minimized = windows.filter(w => w.minimized);
+  const DEFAULT_APP_ICON =
+    'data:image/svg+xml;utf8,' +
+    encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+         <rect x="3" y="3" width="18" height="18" rx="4" ry="4" fill="currentColor" />
+         <rect x="7" y="7" width="10" height="10" rx="2" ry="2" fill="#fff"/>
+       </svg>`
+    );
   return (
     <>
       <Sider
@@ -153,6 +164,35 @@ const SideNav = memo(function SideNav({ collapsed, activeKey, onChange, onToggle
             borderTop: `1px solid ${token.colorBorderSecondary}`
           }}
         >
+          {/* 最小化应用 Dock */}
+          {minimized.length > 0 && (
+            <div
+              style={{
+                width: '100%',
+                display: 'flex',
+                flexDirection: collapsed ? 'column' : 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: collapsed ? 'nowrap' : 'wrap',
+                maxHeight: collapsed ? 160 : undefined,
+                overflowY: collapsed ? 'auto' : 'visible',
+              }}
+            >
+              {minimized.map(w => {
+                const src = w.app.iconUrl || DEFAULT_APP_ICON;
+                return (
+                  <Tooltip key={w.id} title={`${w.app.name} - ${w.entry.name}`} placement={collapsed ? 'right' : 'top'}>
+                    <Button
+                      shape="circle"
+                      onClick={() => restoreWindow(w.id)}
+                      icon={<img src={src} alt={w.app.name} style={{ width: 16, height: 16 }} />}
+                    />
+                  </Tooltip>
+                );
+              })}
+            </div>
+          )}
           <div style={{
             fontSize: 12,
             color: token.colorTextSecondary,

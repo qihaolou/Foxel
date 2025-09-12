@@ -4,6 +4,7 @@ import { VideoPlayerApp } from './VideoPlayer.tsx';
 export const descriptor: AppDescriptor = {
   key: 'video-player',
   name: '视频播放器',
+  iconUrl: 'https://api.iconify.design/mdi:video.svg',
   supported: (entry) => {
     if (entry.is_dir) return false;
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';

@@ -113,7 +113,10 @@ const PluginsPage = memo(function PluginsPage() {
       >
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <Typography.Paragraph style={{ marginBottom: 8 }} ellipsis={{ rows: 2 }}>
+            <Typography.Paragraph
+              style={{ marginBottom: 8, minHeight: 44, lineHeight: '22px' }}
+              ellipsis={{ rows: 2 }}
+            >
               {p.description || '（暂无描述）'}
             </Typography.Paragraph>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -205,7 +208,10 @@ const PluginsPage = memo(function PluginsPage() {
           </Button>
         ]}
       >
-        <Typography.Paragraph style={{ marginBottom: 8 }} ellipsis={{ rows: 2 }}>
+        <Typography.Paragraph
+          style={{ marginBottom: 8, minHeight: 44, lineHeight: '22px' }}
+          ellipsis={{ rows: 2 }}
+        >
           {item.description || '（暂无描述）'}
         </Typography.Paragraph>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -304,6 +310,14 @@ const PluginsPage = memo(function PluginsPage() {
                       { value: 'downloads', label: t('Downloads') },
                     ]}
                   />
+                  <Button
+                    icon={<LinkOutlined />}
+                    href="https://center.foxel.cc"
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Foxel Center
+                  </Button>
                 </div>
                 {repoLoading ? (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 12 }}>

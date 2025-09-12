@@ -4,6 +4,7 @@ import { TextEditorApp } from './TextEditor.tsx';
 export const descriptor: AppDescriptor = {
   key: 'text-editor',
   name: '文本编辑器',
+  iconUrl: 'https://api.iconify.design/mdi:file-document-outline.svg',
   supported: (entry) => {
     if (entry.is_dir) return false;
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';

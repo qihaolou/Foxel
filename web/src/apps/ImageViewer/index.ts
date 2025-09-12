@@ -4,6 +4,7 @@ import { ImageViewerApp } from './ImageViewer.tsx';
 export const descriptor: AppDescriptor = {
   key: 'image-viewer',
   name: '图片查看器',
+  iconUrl: 'https://api.iconify.design/mdi:image.svg',
   supported: (entry) => {
     if (entry.is_dir) return false;
     const ext = entry.name.split('.').pop()?.toLowerCase() || '';
