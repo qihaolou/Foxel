@@ -1,3 +1,4 @@
+import os
 from services.config import VERSION, ConfigCenter
 from services.adapters.registry import runtime_registry
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,6 +16,7 @@ load_dotenv()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    os.makedirs("data/db", exist_ok=True)
     await init_db()
     await runtime_registry.refresh()
     await ConfigCenter.set("APP_VERSION", VERSION)
@@ -29,7 +31,7 @@ async def lifespan(app: FastAPI):
 def create_app() -> FastAPI:
     app = FastAPI(
         title="Foxel",
-        description="AList-like virtual storage aggregator",
+        description="A highly extensible private cloud storage solution for individuals and teams",
         lifespan=lifespan,
     )
     include_routers(app)
